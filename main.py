@@ -250,6 +250,7 @@ def create_user(request: Request, username: str = Form(...), password: str = For
                 db: DBSession = Depends(get_db), admin: User = Depends(require_admin)):
     if get_user_by_username(db, username):
         return templates.TemplateResponse("dashboard.html", {"request": request, "user": admin, "error": "Пользователь существует"})
-    u = User(username=username, full_name=full_name, password_hash=bcrypt.hash(password), role=role, school=school, subject=subject)
+    u = User(username=username, full_name=full_name, password_hash=bcrypt.hash(password[:72]), role=role, school=school, subject=subject)
     db.add(u); db.commit()
     return RedirectResponse(url="/dashboard", status_code=302)
+
