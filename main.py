@@ -22,7 +22,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", "supersecretkey123")
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./db.sqlite3")
 UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "uploads"))
 ADMIN_USER = os.getenv("ADMIN_USER", "admin")
-ADMIN_PASS = os.getenv("ADMIN_PASS", "admin123")
+ADMIN_PASS = os.getenv("ADMIN_PASS", "12345")
 
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -250,7 +250,11 @@ def create_user(request: Request, username: str = Form(...), password: str = For
                 db: DBSession = Depends(get_db), admin: User = Depends(require_admin)):
     if get_user_by_username(db, username):
         return templates.TemplateResponse("dashboard.html", {"request": request, "user": admin, "error": "Пользователь существует"})
-    u = User(username=username, full_name=full_name, password_hash=bcrypt.hash(password[:72]), role=role, school=school, subject=subject)
+    safe_pass = password[:50]  # обрежем чтобы не было больше 72 байта
+u = User(username=username, full_name=full_name,
+         password_hash=bcrypt.hash(safe_pass),
+         role=role, school=school, subject=subject)
     db.add(u); db.commit()
     return RedirectResponse(url="/dashboard", status_code=302)
+
 
