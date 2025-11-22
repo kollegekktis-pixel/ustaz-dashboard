@@ -12,7 +12,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from sqlalchemy import create_engine, Column, Integer, String, Date, ForeignKey
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship, Session as DBSession
-from passlib.hash import bcrypt
+import bcrypt  # ИЗМЕНЕНО: используем нативный bcrypt вместо passlib
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -41,13 +41,19 @@ engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} i
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ БЕЗОПАСНОГО ХЕШИРОВАНИЯ
-def safe_hash_password(password: str) -> str:
-    """Обрезает пароль до 72 байт и хеширует его"""
-    # Обрезаем до 72 байт (ограничение bcrypt)
+# ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ РАБОТЫ С ПАРОЛЯМИ
+def hash_password(password: str) -> str:
+    """Безопасно хеширует пароль с учетом ограничения bcrypt в 72 байта"""
     password_bytes = password.encode('utf-8')[:72]
-    safe_password = password_bytes.decode('utf-8', errors='ignore')
-    return bcrypt.hash(safe_password)
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password_bytes, salt)
+    return hashed.decode('utf-8')
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Проверяет пароль"""
+    password_bytes = plain_password.encode('utf-8')[:72]
+    hashed_bytes = hashed_password.encode('utf-8')
+    return bcrypt.checkpw(password_bytes, hashed_bytes)
 
 class User(Base):
     __tablename__ = "users"
@@ -60,11 +66,9 @@ class User(Base):
     subject = Column(String, nullable=True)
     achievements = relationship("Achievement", back_populates="teacher")
 
-    def verify_password(self, plain: str) -> bool:
-        # Обрезаем пароль перед проверкой
-        password_bytes = plain.encode('utf-8')[:72]
-        safe_password = password_bytes.decode('utf-8', errors='ignore')
-        return bcrypt.verify(safe_password, self.password_hash)
+    def check_password(self, plain: str) -> bool:
+        """Проверяет пароль пользователя"""
+        return verify_password(plain, self.password_hash)
 
 class Achievement(Base):
     __tablename__ = "achievements"
@@ -90,13 +94,13 @@ def get_db() -> Generator[DBSession, None, None]:
 def get_user_by_username(db: DBSession, username: str):
     return db.query(User).filter(User.username == username).first()
 
-# Ensure admin - ИСПРАВЛЕНО
+# Ensure admin
 with SessionLocal() as db:
     if not get_user_by_username(db, ADMIN_USER):
         admin = User(
             username=ADMIN_USER, 
             full_name="Methodist Admin",
-            password_hash=safe_hash_password(ADMIN_PASS),  # ИСПОЛЬЗУЕМ БЕЗОПАСНУЮ ФУНКЦИЮ
+            password_hash=hash_password(ADMIN_PASS),
             role="admin", 
             school="", 
             subject=""
@@ -145,7 +149,7 @@ def login_get(request: Request):
 @app.post("/login")
 def login_post(request: Request, username: str = Form(...), password: str = Form(...), db: DBSession = Depends(get_db)):
     user = get_user_by_username(db, username)
-    if not user or not user.verify_password(password):
+    if not user or not user.check_password(password):
         dummy = type("U",(object,),{"full_name":"", "username":""})()
         return templates.TemplateResponse("login.html", {"request": request, "error": "Неверный логин или пароль", "user": dummy})
     request.session["user_id"] = user.id
@@ -261,7 +265,7 @@ def api_rating(db: DBSession = Depends(get_db), user: User = Depends(require_use
     school_out = sorted(school_out, key=lambda x: x["avg"], reverse=True)
     return {"teachers": teachers_out, "schools": school_out}
 
-# Admin: create user - ИСПРАВЛЕНО
+# Admin: create user
 @app.post("/create_user")
 def create_user(
     request: Request,
@@ -281,11 +285,11 @@ def create_user(
             {"request": request, "user": admin, "error": "Пользователь существует"}
         )
 
-    # Создаем пользователя с безопасным хешированием
+    # Создаем пользователя
     u = User(
         username=username,
         full_name=full_name,
-        password_hash=safe_hash_password(password),  # ИСПОЛЬЗУЕМ БЕЗОПАСНУЮ ФУНКЦИЮ
+        password_hash=hash_password(password),
         role=role,
         school=school,
         subject=subject
