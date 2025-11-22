@@ -245,16 +245,30 @@ def api_rating(db: DBSession = Depends(get_db), user: User = Depends(require_use
 
 # Admin: create user (simple)
 @app.post("/create_user")
-def create_user(request: Request, username: str = Form(...), password: str = Form(...),
-                full_name: str = Form(""), role: str = Form("teacher"), school: str = Form(""), subject: str = Form(""),
-                db: DBSession = Depends(get_db), admin: User = Depends(require_admin)):
-    if get_user_by_username(db, username):
-        return templates.TemplateResponse("dashboard.html", {"request": request, "user": admin, "error": "Пользователь существует"})
-    safe_pass = password[:50]  # обрежем чтобы не было больше 72 байта
-u = User(username=username, full_name=full_name,
+def create_user(request: Request, 
+                username: str = Form(...), 
+                password: str = Form(...),
+                full_name: str = Form(""), 
+                role: str = Form("teacher"), 
+                school: str = Form(""), 
+                subject: str = Form(""),
+                db: DBSession = Depends(get_db), 
+                admin: User = Depends(require_admin)
+               ):
+if get_user_by_username(db, username):
+    return templates.TemplateResponse("dashboard.html", 
+                                          {"request": request, "user": admin, "error": "Пользователь существует"})
+safe_pass = password[:50]  # обрежем чтобы не было больше 72 байта
+u = User
+         (username=username, 
+         full_name=full_name,
          password_hash=bcrypt.hash(safe_pass),
-         role=role, school=school, subject=subject)
-    db.add(u); db.commit()
+         role=role, 
+         school=school, 
+         subject=subject)
+db.add(u); 
+db.commit()
     return RedirectResponse(url="/dashboard", status_code=302)
+
 
 
