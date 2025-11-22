@@ -41,6 +41,14 @@ engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} i
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+# ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ БЕЗОПАСНОГО ХЕШИРОВАНИЯ
+def safe_hash_password(password: str) -> str:
+    """Обрезает пароль до 72 байт и хеширует его"""
+    # Обрезаем до 72 байт (ограничение bcrypt)
+    password_bytes = password.encode('utf-8')[:72]
+    safe_password = password_bytes.decode('utf-8', errors='ignore')
+    return bcrypt.hash(safe_password)
+
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
@@ -53,7 +61,10 @@ class User(Base):
     achievements = relationship("Achievement", back_populates="teacher")
 
     def verify_password(self, plain: str) -> bool:
-        return bcrypt.verify(plain, self.password_hash)
+        # Обрезаем пароль перед проверкой
+        password_bytes = plain.encode('utf-8')[:72]
+        safe_password = password_bytes.decode('utf-8', errors='ignore')
+        return bcrypt.verify(safe_password, self.password_hash)
 
 class Achievement(Base):
     __tablename__ = "achievements"
@@ -79,12 +90,19 @@ def get_db() -> Generator[DBSession, None, None]:
 def get_user_by_username(db: DBSession, username: str):
     return db.query(User).filter(User.username == username).first()
 
-# Ensure admin
+# Ensure admin - ИСПРАВЛЕНО
 with SessionLocal() as db:
     if not get_user_by_username(db, ADMIN_USER):
-        admin = User(username=ADMIN_USER, full_name="Methodist Admin",
-                     password_hash=bcrypt.hash(ADMIN_PASS), role="admin", school="", subject="")
-        db.add(admin); db.commit()
+        admin = User(
+            username=ADMIN_USER, 
+            full_name="Methodist Admin",
+            password_hash=safe_hash_password(ADMIN_PASS),  # ИСПОЛЬЗУЕМ БЕЗОПАСНУЮ ФУНКЦИЮ
+            role="admin", 
+            school="", 
+            subject=""
+        )
+        db.add(admin)
+        db.commit()
         print("Created admin user:", ADMIN_USER)
 
 LEVEL_POINTS = {"school": 2, "city": 3, "region": 4, "republic": 5}
@@ -243,7 +261,7 @@ def api_rating(db: DBSession = Depends(get_db), user: User = Depends(require_use
     school_out = sorted(school_out, key=lambda x: x["avg"], reverse=True)
     return {"teachers": teachers_out, "schools": school_out}
 
-# Admin: create user (simple)
+# Admin: create user - ИСПРАВЛЕНО
 @app.post("/create_user")
 def create_user(
     request: Request,
@@ -263,14 +281,11 @@ def create_user(
             {"request": request, "user": admin, "error": "Пользователь существует"}
         )
 
-    # Обрезаем пароль до безопасной длины
-    safe_pass = password[:50]
-
-    # Создаем пользователя
+    # Создаем пользователя с безопасным хешированием
     u = User(
         username=username,
         full_name=full_name,
-        password_hash=bcrypt.hash(safe_pass),
+        password_hash=safe_hash_password(password),  # ИСПОЛЬЗУЕМ БЕЗОПАСНУЮ ФУНКЦИЮ
         role=role,
         school=school,
         subject=subject
@@ -280,5 +295,3 @@ def create_user(
     db.commit()
 
     return RedirectResponse(url="/dashboard", status_code=302)
-
-
