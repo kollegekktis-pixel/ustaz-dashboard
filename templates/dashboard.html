@@ -4,6 +4,19 @@
 
 {% block content %}
 
+<style>
+.level-hint {
+    display: inline-block;
+    background: #7030A0;
+    color: white;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+</style>
+
 <!-- TABS -->
 <div class="tabs">
     <div class="tab" onclick="switchTab('profile')">👤 {{ t('profile') }}</div>
@@ -80,30 +93,26 @@
                     </div>
 
                     <div>
-                        <label>{{ t('level') }}</label>
+                        <label>{{ t('level') }} <span style="color: #999; font-size: 0.85rem;">(баллы начисляются автоматически)</span></label>
                         <select name="level">
-                            <option value="school">{{ t('level_school') }}</option>
-                            <option value="city">{{ t('level_city') }}</option>
-                            <option value="regional">{{ t('level_regional') }}</option>
-                            <option value="national">{{ t('level_national') }}</option>
-                            <option value="international">{{ t('level_international') }}</option>
+                            <option value="school">{{ t('level_school') }} <span class="level-hint">2 балла</span></option>
+                            <option value="city">{{ t('level_city') }} <span class="level-hint">3 балла</span></option>
+                            <option value="regional">{{ t('level_regional') }} <span class="level-hint">4 балла</span></option>
+                            <option value="national">{{ t('level_national') }} <span class="level-hint">5 баллов</span></option>
+                            <option value="international">{{ t('level_international') }} <span class="level-hint">6 баллов</span></option>
                         </select>
+                        <div style="margin-top: 0.5rem; padding: 0.75rem; background: #f0f0f0; border-radius: 8px; font-size: 0.85rem;">
+                            💡 <strong>Баллы:</strong> Школьный=2, Городской=3, Областной=4, Республиканский=5, Международный=6
+                        </div>
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
-                    <div>
-                        <label>{{ t('file') }}</label>
-                        <input name="file" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" 
-                               style="padding: 0.5rem;">
-                        <div style="font-size: 0.85rem; color: #666; margin-top: 0.25rem;">
-                            📎 PDF, JPG, PNG, DOC, DOCX (макс. 5 МБ)
-                        </div>
-                    </div>
-
-                    <div>
-                        <label>{{ t('points') }}</label>
-                        <input name="points" type="number" step="0.1" value="0" min="0">
+                <div>
+                    <label>{{ t('file') }}</label>
+                    <input name="file" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" 
+                           style="padding: 0.5rem;">
+                    <div style="font-size: 0.85rem; color: #666; margin-top: 0.25rem;">
+                        📎 PDF, JPG, PNG, DOC, DOCX (макс. 5 МБ)
                     </div>
                 </div>
 
@@ -131,6 +140,9 @@
                         <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.75rem;">
                             <span style="background: #f0f0f0; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">
                                 📁 {{ t('category_' + ach.category) }}
+                            </span>
+                            <span style="background: #e8f4f8; color: #0077b6; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">
+                                🎯 {{ t('level_' + ach.level) }}
                             </span>
                             <span style="background: #7030A0; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; font-weight: 600;">
                                 ⭐ {{ ach.points }} {{ t('points') }}
@@ -218,6 +230,7 @@
                 <tr>
                     <th>{{ t('teacher') }}</th>
                     <th>{{ t('title') }}</th>
+                    <th>{{ t('level') }}</th>
                     <th>{{ t('category') }}</th>
                     <th>{{ t('points') }}</th>
                     <th>{{ t('date') }}</th>
@@ -229,8 +242,9 @@
                 <tr>
                     <td>{{ ach.user.full_name or ach.user.username }}</td>
                     <td>{{ ach.title }}</td>
+                    <td><span style="background: #e8f4f8; padding: 0.25rem 0.5rem; border-radius: 8px; font-size: 0.85rem;">{{ t('level_' + ach.level) }}</span></td>
                     <td>{{ t('category_' + ach.category) }}</td>
-                    <td>{{ ach.points }}</td>
+                    <td><strong style="color: #7030A0;">{{ ach.points }}</strong></td>
                     <td>{{ ach.created_at.strftime('%Y-%m-%d') }}</td>
                     <td>
                         <div style="display: flex; gap: 0.5rem;">
