@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Вход - UstazSapa{% endblock %}
+{% block title %}{{ t('login') }} - {{ t('app_title') }}{% endblock %}
 
 {% block content %}
 <style>
@@ -8,17 +8,17 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        min-height: calc(100vh - 120px);
-        padding: 2rem 1rem;
+        min-height: calc(100vh - 200px);
     }
 
     .login-card {
         background: white;
-        border-radius: 24px;
+        border-radius: 20px;
         padding: 3rem;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-        width: 100%;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        border: 3px solid #FFFFFF;
         max-width: 450px;
+        width: 100%;
         animation: fadeInUp 0.6s ease;
     }
 
@@ -35,91 +35,27 @@
 
     .login-header {
         text-align: center;
-        margin-bottom: 2.5rem;
+        margin-bottom: 2rem;
     }
 
     .login-header h2 {
-        font-size: 2rem;
-        font-weight: 700;
         color: #7030A0;
+        font-size: 2rem;
         margin-bottom: 0.5rem;
     }
 
     .login-header p {
-        color: #718096;
+        color: #666;
         font-size: 0.95rem;
-    }
-
-    .login-form {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-
-    .form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .form-group label {
-        font-weight: 600;
-        color: #2d3748;
-        font-size: 0.95rem;
-    }
-
-    .input-wrapper {
-        position: relative;
-    }
-
-    .input-wrapper input {
-        width: 100%;
-        padding: 1rem 1.25rem;
-        border: 2px solid #e2e8f0;
-        border-radius: 12px;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        background: #f7fafc;
-    }
-
-    .input-wrapper input:focus {
-        outline: none;
-        border-color: #7030A0;
-        background: white;
-        box-shadow: 0 0 0 4px rgba(112, 48, 160, 0.1);
-    }
-
-    .login-btn {
-        padding: 1rem;
-        background: #7030A0;
-        color: white;
-        border: none;
-        border-radius: 12px;
-        font-size: 1.05rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(112, 48, 160, 0.4);
-        margin-top: 0.5rem;
-    }
-
-    .login-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(112, 48, 160, 0.6);
-    }
-
-    .login-btn:active {
-        transform: translateY(0);
     }
 
     .error-message {
-        background: #fed7d7;
-        color: #c53030;
+        background: #f8d7da;
+        color: #721c24;
         padding: 1rem;
-        border-radius: 12px;
-        text-align: center;
-        font-size: 0.9rem;
-        font-weight: 500;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        border: 1px solid #f5c6cb;
         animation: shake 0.5s ease;
     }
 
@@ -129,48 +65,82 @@
         75% { transform: translateX(10px); }
     }
 
-    .login-footer {
-        margin-top: 2rem;
-        text-align: center;
-        color: #718096;
-        font-size: 0.875rem;
+    .form-group {
+        margin-bottom: 1.5rem;
     }
 
-    /* MOBILE RESPONSIVE */
-    @media (max-width: 768px) {
-        .login-card {
-            padding: 2rem 1.5rem;
-        }
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #333;
+        font-weight: 600;
+    }
 
-        .login-header h2 {
-            font-size: 1.75rem;
-        }
+    .form-group input {
+        width: 100%;
+        padding: 0.9rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
 
-        .input-wrapper input {
-            padding: 0.875rem 1rem;
-        }
+    .form-group input:focus {
+        outline: none;
+        border-color: #7030A0;
+        box-shadow: 0 0 0 4px rgba(112, 48, 160, 0.1);
+    }
 
-        .login-btn {
-            padding: 0.875rem;
-        }
+    .login-btn {
+        width: 100%;
+        background: linear-gradient(135deg, #7030A0, #9b59d0);
+        color: white;
+        padding: 1rem;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(112, 48, 160, 0.3);
+    }
+
+    .login-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 25px rgba(112, 48, 160, 0.4);
+    }
+
+    .register-link {
+        text-align: center;
+        margin-top: 1.5rem;
+        color: #666;
+    }
+
+    .register-link a {
+        color: #7030A0;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .register-link a:hover {
+        text-decoration: underline;
+    }
+
+    .footer-text {
+        text-align: center;
+        margin-top: 2rem;
+        color: white;
+        font-size: 0.9rem;
     }
 
     @media (max-width: 480px) {
-        .login-container {
-            padding: 1rem;
-        }
-
         .login-card {
-            padding: 1.5rem 1rem;
-            border-radius: 20px;
+            padding: 2rem 1.5rem;
+            margin: 1rem;
         }
 
         .login-header h2 {
-            font-size: 1.5rem;
-        }
-
-        .login-header {
-            margin-bottom: 2rem;
+            font-size: 1.6rem;
         }
     }
 </style>
@@ -178,59 +148,35 @@
 <div class="login-container">
     <div class="login-card">
         <div class="login-header">
-            <h2>UstasSapa Lab</h2>
-            <p>Войдите в систему</p>
+            <h2>{{ t('welcome') }}</h2>
+            <p>{{ t('login_subtitle') }}</p>
         </div>
 
         {% if error %}
-        <div class="error-message">
-            {{ error }}
-        </div>
+        <div class="error-message">{{ error }}</div>
         {% endif %}
 
-        <form method="post" class="login-form">
+        <form method="post">
             <div class="form-group">
-                <label for="username">Имя пользователя</label>
-                <div class="input-wrapper">
-                    <input 
-                        type="text" 
-                        id="username" 
-                        name="username" 
-                        placeholder="Введите имя пользователя"
-                        required
-                        autocomplete="username"
-                    >
-                </div>
+                <label>{{ t('username') }}</label>
+                <input name="username" type="text" required>
             </div>
 
             <div class="form-group">
-                <label for="password">Пароль</label>
-                <div class="input-wrapper">
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        placeholder="Введите пароль"
-                        required
-                        autocomplete="current-password"
-                    >
-                </div>
+                <label>{{ t('password') }}</label>
+                <input name="password" type="password" required>
             </div>
 
-            <button type="submit" class="login-btn">
-                Войти
-            </button>
+            <button type="submit" class="login-btn">{{ t('login') }}</button>
         </form>
 
-        <div class="login-footer">
-            {% if allow_registration %}
-            <p style="margin-bottom: 0.75rem;">
-                Нет аккаунта? <a href="/register" style="color: #7030A0; text-decoration: none; font-weight: 600;">Зарегистрироваться</a>
-            </p>
-            {% endif %}
-            <p>© 2024 UstasSapa Lab. Все права защищены.</p>
+        <div class="register-link">
+            {{ t('no_account') }} <a href="/register">{{ t('register_here') }}</a>
         </div>
     </div>
 </div>
 
+<div class="footer-text">
+    © 2024 {{ t('app_title') }}
+</div>
 {% endblock %}
