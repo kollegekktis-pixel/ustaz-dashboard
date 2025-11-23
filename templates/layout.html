@@ -422,6 +422,30 @@
                 text-align: center;
             }
         }
+
+        /* FOOTER */
+        .footer {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 2rem;
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 3rem;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 480px) {
+            .footer {
+                padding: 1rem;
+                font-size: 0.8rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -464,6 +488,12 @@
 <main>
     {% block content %}{% endblock %}
 </main>
+
+<footer class="footer">
+    <div class="footer-content">
+        © 2025 Mambetov Sanat. All rights reserved
+    </div>
+</footer>
 
 <script>
 function toggleMenu() {
