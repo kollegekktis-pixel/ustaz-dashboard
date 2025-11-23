@@ -1,391 +1,565 @@
-# main.py
 import os
-from pathlib import Path
-from datetime import date
-from typing import Generator
+import secrets
+from datetime import datetime
+from typing import Optional
 
-from fastapi import FastAPI, Request, Form, UploadFile, File, Depends, HTTPException, status
-from fastapi.responses import RedirectResponse, HTMLResponse, FileResponse
+import bcrypt
+from fastapi import FastAPI, Request, Form, Depends, HTTPException, Cookie
+from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from starlette.middleware.sessions import SessionMiddleware
+from itsdangerous import URLSafeTimedSerializer
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, ForeignKey, Boolean
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, Session, relationship
 
-from sqlalchemy import create_engine, Column, Integer, String, Date, ForeignKey
-from sqlalchemy.orm import sessionmaker, declarative_base, relationship, Session as DBSession
-import bcrypt
-from dotenv import load_dotenv
-
-load_dotenv()
-
-# Config
-SECRET_KEY = os.getenv("SECRET_KEY", "supersecretkey123")
-# Поддержка и PostgreSQL и SQLite
+# ===========================
+# DATABASE SETUP
+# ===========================
 DATABASE_URL = os.getenv("DATABASE_URL")
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 if not DATABASE_URL:
     DATABASE_URL = "sqlite:///./db.sqlite3"
 
-UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "uploads"))
-ADMIN_USER = os.getenv("ADMIN_USER", "admin")
-ADMIN_PASS = os.getenv("ADMIN_PASS", "12345")
-ALLOW_REGISTRATION = os.getenv("ALLOW_REGISTRATION", "true").lower() == "true"
-
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-
-app = FastAPI(title="Учительский Дашборд")
-app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
-
-# static
-app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
-app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
-
-# DB
-engine = create_engine(
-    DATABASE_URL, 
-    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
-    pool_pre_ping=True
-)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {})
+SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 
-# ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ РАБОТЫ С ПАРОЛЯМИ
-def hash_password(password: str) -> str:
-    """Безопасно хеширует пароль с учетом ограничения bcrypt в 72 байта"""
-    password_bytes = password.encode('utf-8')[:72]
-    salt = bcrypt.gensalt()
-    hashed = bcrypt.hashpw(password_bytes, salt)
-    return hashed.decode('utf-8')
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Проверяет пароль"""
-    password_bytes = plain_password.encode('utf-8')[:72]
-    hashed_bytes = hashed_password.encode('utf-8')
-    return bcrypt.checkpw(password_bytes, hashed_bytes)
-
+# ===========================
+# MODELS
+# ===========================
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(100), unique=True, index=True)
-    full_name = Column(String(200), nullable=True)
-    password_hash = Column(String(200))
-    role = Column(String(50), default="teacher")
-    school = Column(String(200), nullable=True)
-    subject = Column(String(200), nullable=True)
-    achievements = relationship("Achievement", back_populates="teacher")
+    username = Column(String, unique=True, nullable=False, index=True)
+    password_hash = Column(String, nullable=False)
+    full_name = Column(String)
+    is_admin = Column(Boolean, default=False)
+    school = Column(String)
+    achievements = relationship("Achievement", back_populates="user")
 
-    def check_password(self, plain: str) -> bool:
-        """Проверяет пароль пользователя"""
-        return verify_password(plain, self.password_hash)
+    def check_password(self, password: str) -> bool:
+        password_bytes = password.encode('utf-8')[:72]
+        return bcrypt.checkpw(password_bytes, self.password_hash.encode('utf-8'))
+
 
 class Achievement(Base):
     __tablename__ = "achievements"
     id = Column(Integer, primary_key=True, index=True)
-    teacher_id = Column(Integer, ForeignKey("users.id"))
-    title = Column(String(500))
-    level = Column(String(50))
-    date = Column(Date)
-    filename = Column(String(200), nullable=True)
-    status = Column(String(50), default="pending")
-    teacher = relationship("User", back_populates="achievements")
+    user_id = Column(Integer, ForeignKey("users.id"))
+    title = Column(String, nullable=False)
+    description = Column(String)
+    category = Column(String)
+    points = Column(Float, default=0.0)
+    status = Column(String, default="pending")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    user = relationship("User", back_populates="achievements")
+
 
 Base.metadata.create_all(bind=engine)
 
-# Helpers
-def get_db() -> Generator[DBSession, None, None]:
+# ===========================
+# PASSWORD HASHING
+# ===========================
+def hash_password(password: str) -> str:
+    password_bytes = password.encode('utf-8')[:72]
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password_bytes, salt).decode('utf-8')
+
+
+# ===========================
+# APP SETUP
+# ===========================
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
+SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_hex(32))
+serializer = URLSafeTimedSerializer(SECRET_KEY)
+
+ALLOW_REGISTRATION = os.getenv("ALLOW_REGISTRATION", "true").lower() == "true"
+
+# ===========================
+# TRANSLATIONS
+# ===========================
+TRANSLATIONS = {
+    "ru": {
+        # Общее
+        "app_title": "UstasSapa Lab",
+        "app_subtitle": "Рейтинговая система оценки достижений учителя",
+        "language": "Язык",
+        "login": "Войти",
+        "logout": "Выйти",
+        "register": "Зарегистрироваться",
+        "dashboard": "Панель",
+        "profile": "Профиль",
+        "add_achievement": "Добавить достижение",
+        "my_achievements": "Мои достижения",
+        "admin_panel": "Админ-панель",
+        "reports": "Отчёты",
+        
+        # Логин
+        "welcome": "UstasSapa Lab",
+        "login_subtitle": "Войдите в систему",
+        "username": "Логин",
+        "password": "Пароль",
+        "no_account": "Нет аккаунта?",
+        "register_here": "Зарегистрируйтесь здесь",
+        
+        # Регистрация
+        "registration": "Регистрация",
+        "registration_subtitle": "Создайте новый аккаунт",
+        "full_name": "ФИО",
+        "school": "Школа",
+        "confirm_password": "Подтвердите пароль",
+        "have_account": "Уже есть аккаунт?",
+        "login_here": "Войдите здесь",
+        
+        # Профиль
+        "welcome_user": "Добро пожаловать",
+        "total_points": "Всего баллов",
+        "pending_achievements": "Ожидают проверки",
+        "approved_achievements": "Подтверждено",
+        
+        # Достижения
+        "title": "Название",
+        "description": "Описание",
+        "category": "Категория",
+        "points": "Баллы",
+        "status": "Статус",
+        "date": "Дата",
+        "actions": "Действия",
+        "approve": "Подтвердить",
+        "reject": "Отклонить",
+        "delete": "Удалить",
+        "save": "Сохранить",
+        "cancel": "Отмена",
+        
+        # Категории
+        "category_publications": "Публикации",
+        "category_conferences": "Конференции",
+        "category_olympiads": "Олимпиады",
+        "category_projects": "Проекты",
+        "category_courses": "Курсы",
+        "category_other": "Другое",
+        
+        # Статусы
+        "status_pending": "Ожидает",
+        "status_approved": "Подтверждено",
+        "status_rejected": "Отклонено",
+        
+        # Рейтинг
+        "top_teachers": "Топ-10 учителей",
+        "rank": "Место",
+        "teacher": "Учитель",
+        "school_ratings": "Рейтинг школ",
+        "total_teachers": "Всего учителей",
+        
+        # Админ
+        "all_users": "Все пользователи",
+        "create_user": "Создать пользователя",
+        "pending_review": "На проверке",
+        "admin_role": "Админ",
+        "teacher_role": "Учитель",
+        
+        # Сообщения
+        "error_invalid_credentials": "Неверный логин или пароль",
+        "error_username_exists": "Логин уже занят",
+        "error_passwords_dont_match": "Пароли не совпадают",
+        "error_short_username": "Логин должен быть минимум 3 символа",
+        "error_short_password": "Пароль должен быть минимум 6 символов",
+        "success_registered": "Регистрация успешна!",
+        "success_achievement_added": "Достижение добавлено!",
+        "success_user_created": "Пользователь создан!",
+    },
+    "kk": {
+        # Жалпы
+        "app_title": "UstasSapa Lab",
+        "app_subtitle": "Мұғалімнің жетістіктерін бағалау рейтингтік жүйесі",
+        "language": "Тіл",
+        "login": "Кіру",
+        "logout": "Шығу",
+        "register": "Тіркелу",
+        "dashboard": "Басты бет",
+        "profile": "Профиль",
+        "add_achievement": "Жетістік қосу",
+        "my_achievements": "Менің жетістіктерім",
+        "admin_panel": "Әкімші панелі",
+        "reports": "Есептер",
+        
+        # Кіру
+        "welcome": "UstasSapa Lab",
+        "login_subtitle": "Жүйеге кіріңіз",
+        "username": "Логин",
+        "password": "Құпия сөз",
+        "no_account": "Аккаунт жоқ па?",
+        "register_here": "Мұнда тіркеліңіз",
+        
+        # Тіркелу
+        "registration": "Тіркелу",
+        "registration_subtitle": "Жаңа аккаунт жасаңыз",
+        "full_name": "Аты-жөні",
+        "school": "Мектеп",
+        "confirm_password": "Құпия сөзді растаңыз",
+        "have_account": "Аккаунт бар ма?",
+        "login_here": "Мұнда кіріңіз",
+        
+        # Профиль
+        "welcome_user": "Қош келдіңіз",
+        "total_points": "Барлық ұпайлар",
+        "pending_achievements": "Тексеруді күтуде",
+        "approved_achievements": "Расталған",
+        
+        # Жетістіктер
+        "title": "Атауы",
+        "description": "Сипаттама",
+        "category": "Санат",
+        "points": "Ұпайлар",
+        "status": "Мәртебе",
+        "date": "Күні",
+        "actions": "Әрекеттер",
+        "approve": "Растау",
+        "reject": "Қабылдамау",
+        "delete": "Жою",
+        "save": "Сақтау",
+        "cancel": "Болдырмау",
+        
+        # Санаттар
+        "category_publications": "Жарияланымдар",
+        "category_conferences": "Конференциялар",
+        "category_olympiads": "Олимпиадалар",
+        "category_projects": "Жобалар",
+        "category_courses": "Курстар",
+        "category_other": "Басқа",
+        
+        # Мәртебелер
+        "status_pending": "Күтуде",
+        "status_approved": "Расталған",
+        "status_rejected": "Қабылданбаған",
+        
+        # Рейтинг
+        "top_teachers": "Топ-10 мұғалімдер",
+        "rank": "Орын",
+        "teacher": "Мұғалім",
+        "school_ratings": "Мектептер рейтингі",
+        "total_teachers": "Барлық мұғалімдер",
+        
+        # Әкімші
+        "all_users": "Барлық пайдаланушылар",
+        "create_user": "Пайдаланушы жасау",
+        "pending_review": "Тексеруде",
+        "admin_role": "Әкімші",
+        "teacher_role": "Мұғалім",
+        
+        # Хабарламалар
+        "error_invalid_credentials": "Логин немесе құпия сөз қате",
+        "error_username_exists": "Логин бос емес",
+        "error_passwords_dont_match": "Құпия сөздер сәйкес келмейді",
+        "error_short_username": "Логин кемінде 3 таңба болуы керек",
+        "error_short_password": "Құпия сөз кемінде 6 таңба болуы керек",
+        "success_registered": "Тіркелу сәтті өтті!",
+        "success_achievement_added": "Жетістік қосылды!",
+        "success_user_created": "Пайдаланушы жасалды!",
+    }
+}
+
+def get_translation(lang: str, key: str) -> str:
+    """Получить перевод по ключу"""
+    return TRANSLATIONS.get(lang, TRANSLATIONS["ru"]).get(key, key)
+
+# ===========================
+# DEPENDENCIES
+# ===========================
+def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
 
-def get_user_by_username(db: DBSession, username: str):
-    return db.query(User).filter(User.username == username).first()
 
-# Ensure admin
-with SessionLocal() as db:
-    if not get_user_by_username(db, ADMIN_USER):
-        admin = User(
-            username=ADMIN_USER, 
-            full_name="Methodist Admin",
-            password_hash=hash_password(ADMIN_PASS),
-            role="admin", 
-            school="", 
-            subject=""
-        )
-        db.add(admin)
-        db.commit()
-        print("Created admin user:", ADMIN_USER)
-
-LEVEL_POINTS = {"school": 2, "city": 3, "region": 4, "republic": 5}
-LEVEL_LABELS = {"school": "Школьный", "city": "Городской", "region": "Областной", "republic": "Республиканский"}
-
-# Auth helpers
-def current_user(request: Request, db: DBSession):
-    uid = request.session.get("user_id")
-    if not uid:
+def get_current_user(session_token: Optional[str] = Cookie(None), db: Session = Depends(get_db)) -> Optional[User]:
+    if not session_token:
         return None
-    return db.query(User).filter(User.id == uid).first()
+    try:
+        user_id = serializer.loads(session_token, max_age=3600 * 24 * 7)
+        return db.query(User).filter(User.id == user_id).first()
+    except:
+        return None
 
 
-def require_user(request: Request, db: DBSession = Depends(get_db)):
-    user = current_user(request, db)
-    if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
-    return user
+def get_language(language: Optional[str] = Cookie(None)) -> str:
+    """Получить текущий язык из cookie"""
+    return language if language in ["ru", "kk"] else "ru"
 
-def require_admin(request: Request, db: DBSession = Depends(get_db)):
-    user = require_user(request, db)
-    if user.role != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not admin")
-    return user
 
-# Routes
+# ===========================
+# STARTUP EVENT
+# ===========================
+@app.on_event("startup")
+def create_admin():
+    db = SessionLocal()
+    admin = db.query(User).filter(User.username == "admin").first()
+    if not admin:
+        admin_pass = os.getenv("ADMIN_PASS", "adminpass123")
+        hashed_pw = hash_password(admin_pass)
+        new_admin = User(
+            username="admin",
+            password_hash=hashed_pw,
+            full_name="Administrator",
+            is_admin=True,
+            school="System"
+        )
+        db.add(new_admin)
+        db.commit()
+        print("✅ Created admin user: admin")
+    db.close()
+
+
+# ===========================
+# ROUTES - Language Switcher
+# ===========================
+@app.get("/set-language/{lang}")
+def set_language(lang: str, request: Request):
+    """Переключить язык"""
+    if lang not in ["ru", "kk"]:
+        lang = "ru"
+    
+    response = RedirectResponse(url=request.headers.get("referer", "/"), status_code=303)
+    response.set_cookie(key="language", value=lang, max_age=3600 * 24 * 365)
+    return response
+
+
+# ===========================
+# ROUTES - AUTH
+# ===========================
 @app.get("/", response_class=HTMLResponse)
-def root(request: Request):
-    user_id = request.session.get("user_id")
-    if user_id:
-        return RedirectResponse(url="/dashboard", status_code=302)
-    return RedirectResponse(url="/login", status_code=302)
+def index(request: Request, user: User = Depends(get_current_user), lang: str = Depends(get_language)):
+    if user:
+        return RedirectResponse(url="/dashboard")
+    return RedirectResponse(url="/login")
 
 
 @app.get("/login", response_class=HTMLResponse)
-def login_get(request: Request):
-    dummy = type("U",(object,),{"full_name":"", "username":""})()
+def login_page(request: Request, lang: str = Depends(get_language)):
+    t = lambda key: get_translation(lang, key)
     return templates.TemplateResponse("login.html", {
-        "request": request, 
-        "user": dummy,
-        "allow_registration": ALLOW_REGISTRATION
+        "request": request,
+        "lang": lang,
+        "t": t
     })
 
-@app.post("/login")
-def login_post(request: Request, username: str = Form(...), password: str = Form(...), db: DBSession = Depends(get_db)):
-    user = get_user_by_username(db, username)
-    if not user or not user.check_password(password):
-        dummy = type("U",(object,),{"full_name":"", "username":""})()
-        return templates.TemplateResponse("login.html", {
-            "request": request, 
-            "error": "Неверный логин или пароль", 
-            "user": dummy,
-            "allow_registration": ALLOW_REGISTRATION
-        })
-    request.session["user_id"] = user.id
-    return RedirectResponse(url="/dashboard", status_code=302)
 
-# РЕГИСТРАЦИЯ
+@app.post("/login")
+def login_post(
+    username: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db),
+    lang: str = Depends(get_language)
+):
+    user = db.query(User).filter(User.username == username).first()
+    if not user or not user.check_password(password):
+        t = lambda key: get_translation(lang, key)
+        return templates.TemplateResponse("login.html", {
+            "request": {},
+            "error": t("error_invalid_credentials"),
+            "lang": lang,
+            "t": t
+        })
+    
+    token = serializer.dumps(user.id)
+    response = RedirectResponse(url="/dashboard", status_code=303)
+    response.set_cookie(key="session_token", value=token, httponly=True, max_age=3600 * 24 * 7)
+    return response
+
+
 @app.get("/register", response_class=HTMLResponse)
-def register_get(request: Request):
+def register_page(request: Request, lang: str = Depends(get_language)):
     if not ALLOW_REGISTRATION:
-        return RedirectResponse(url="/login", status_code=302)
-    dummy = type("U",(object,),{"full_name":"", "username":""})()
-    return templates.TemplateResponse("register.html", {"request": request, "user": dummy})
+        return RedirectResponse(url="/login")
+    t = lambda key: get_translation(lang, key)
+    return templates.TemplateResponse("register.html", {
+        "request": request,
+        "lang": lang,
+        "t": t
+    })
+
 
 @app.post("/register")
 def register_post(
-    request: Request,
     username: str = Form(...),
     password: str = Form(...),
-    password_confirm: str = Form(...),
-    full_name: str = Form(""),
+    confirm_password: str = Form(...),
+    full_name: str = Form(...),
     school: str = Form(""),
-    subject: str = Form(""),
-    db: DBSession = Depends(get_db)
+    db: Session = Depends(get_db),
+    lang: str = Depends(get_language)
 ):
+    t = lambda key: get_translation(lang, key)
+    
     if not ALLOW_REGISTRATION:
-        return RedirectResponse(url="/login", status_code=302)
+        return RedirectResponse(url="/login")
     
-    dummy = type("U",(object,),{"full_name":"", "username":""})()
-    
-    # Валидация
+    error = None
     if len(username) < 3:
+        error = t("error_short_username")
+    elif len(password) < 6:
+        error = t("error_short_password")
+    elif password != confirm_password:
+        error = t("error_passwords_dont_match")
+    elif db.query(User).filter(User.username == username).first():
+        error = t("error_username_exists")
+    
+    if error:
         return templates.TemplateResponse("register.html", {
-            "request": request, 
-            "error": "Логин должен быть не менее 3 символов",
-            "user": dummy
+            "request": {},
+            "error": error,
+            "lang": lang,
+            "t": t
         })
     
-    if len(password) < 6:
-        return templates.TemplateResponse("register.html", {
-            "request": request, 
-            "error": "Пароль должен быть не менее 6 символов",
-            "user": dummy
-        })
-    
-    if password != password_confirm:
-        return templates.TemplateResponse("register.html", {
-            "request": request, 
-            "error": "Пароли не совпадают",
-            "user": dummy
-        })
-    
-    # Проверка существования
-    if get_user_by_username(db, username):
-        return templates.TemplateResponse("register.html", {
-            "request": request, 
-            "error": "Пользователь с таким логином уже существует",
-            "user": dummy
-        })
-    
-    # Создание пользователя
+    hashed_pw = hash_password(password)
     new_user = User(
         username=username,
+        password_hash=hashed_pw,
         full_name=full_name,
-        password_hash=hash_password(password),
-        role="teacher",
         school=school,
-        subject=subject
+        is_admin=False
     )
-    
     db.add(new_user)
     db.commit()
-    db.refresh(new_user)
     
-    # Автоматический вход
-    request.session["user_id"] = new_user.id
-    return RedirectResponse(url="/dashboard", status_code=302)
+    token = serializer.dumps(new_user.id)
+    response = RedirectResponse(url="/dashboard", status_code=303)
+    response.set_cookie(key="session_token", value=token, httponly=True, max_age=3600 * 24 * 7)
+    return response
+
 
 @app.get("/logout")
-def logout(request: Request):
-    request.session.pop("user_id", None)
-    return RedirectResponse(url="/login")
+def logout():
+    response = RedirectResponse(url="/login")
+    response.delete_cookie("session_token")
+    return response
 
+
+# ===========================
+# ROUTES - DASHBOARD
+# ===========================
 @app.get("/dashboard", response_class=HTMLResponse)
-def dashboard_page(request: Request, db: DBSession = Depends(get_db)):
-    user = current_user(request, db)
+def dashboard(
+    request: Request,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    lang: str = Depends(get_language)
+):
     if not user:
         return RedirectResponse(url="/login")
-    return templates.TemplateResponse("dashboard.html", {"request": request, "user": user, "level_labels": LEVEL_LABELS})
+    
+    t = lambda key: get_translation(lang, key)
+    
+    achievements = db.query(Achievement).filter(Achievement.user_id == user.id).all()
+    all_users = db.query(User).all() if user.is_admin else []
+    pending = db.query(Achievement).filter(Achievement.status == "pending").all() if user.is_admin else []
+    
+    return templates.TemplateResponse("dashboard.html", {
+        "request": request,
+        "user": user,
+        "achievements": achievements,
+        "all_users": all_users,
+        "pending_achievements": pending,
+        "allow_registration": ALLOW_REGISTRATION,
+        "lang": lang,
+        "t": t
+    })
 
-@app.get("/file/{fname}")
-def serve_file(fname: str):
-    path = UPLOAD_DIR / fname
-    if not path.exists():
-        raise HTTPException(status_code=404, detail="File not found")
-    return FileResponse(path)
 
-# API
-@app.get("/api/me")
-def api_me(user: User = Depends(require_user)):
-    return {"id": user.id, "username": user.username, "full_name": user.full_name, "role": user.role, "school": user.school, "subject": user.subject}
-
-@app.get("/api/achievements")
-def api_achievements(db: DBSession = Depends(get_db), user: User = Depends(require_user)):
-    if user.role == "admin":
-        items = db.query(Achievement).order_by(Achievement.id.desc()).all()
-    else:
-        items = db.query(Achievement).filter(Achievement.teacher_id == user.id).order_by(Achievement.id.desc()).all()
-    out = []
-    for a in items:
-        out.append({
-            "id": a.id,
-            "teacher": a.teacher.full_name or a.teacher.username,
-            "teacher_id": a.teacher_id,
-            "title": a.title,
-            "level": a.level,
-            "level_label": LEVEL_LABELS.get(a.level, a.level),
-            "date": a.date.isoformat() if a.date else None,
-            "filename": a.filename,
-            "status": a.status,
-            "points": LEVEL_POINTS.get(a.level, 0)
-        })
-    return out
-
-@app.post("/api/achievements")
-async def api_create_achievement(request: Request,
-                                 title: str = Form(...),
-                                 level: str = Form(...),
-                                 date_val: str = Form(...),
-                                 file: UploadFile = File(None),
-                                 db: DBSession = Depends(get_db),
-                                 user: User = Depends(require_user)):
-    filename = None
-    if file:
-        safe_name = f"{user.id}_{int(date.today().strftime('%Y%m%d'))}_{file.filename}"
-        dest = UPLOAD_DIR / safe_name
-        with open(dest, "wb") as f:
-            content = await file.read()
-            f.write(content)
-        filename = safe_name
-    a = Achievement(teacher_id=user.id, title=title, level=level, date=date.fromisoformat(date_val), filename=filename, status="pending")
-    db.add(a); db.commit()
-    return {"ok": True, "id": a.id}
-
-@app.post("/api/achievements/{aid}/confirm")
-def api_confirm(aid: int, db: DBSession = Depends(get_db), admin: User = Depends(require_admin)):
-    a = db.query(Achievement).filter(Achievement.id == aid).first()
-    if not a:
-        raise HTTPException(404, "Not found")
-    a.status = "confirmed"
+@app.post("/add-achievement")
+def add_achievement(
+    title: str = Form(...),
+    description: str = Form(""),
+    category: str = Form("other"),
+    points: float = Form(0.0),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if not user:
+        return RedirectResponse(url="/login")
+    
+    new_achievement = Achievement(
+        user_id=user.id,
+        title=title,
+        description=description,
+        category=category,
+        points=points,
+        status="pending"
+    )
+    db.add(new_achievement)
     db.commit()
-    return {"ok": True}
+    return RedirectResponse(url="/dashboard?success=achievement_added", status_code=303)
 
-@app.post("/api/achievements/{aid}/reject")
-def api_reject(aid: int, db: DBSession = Depends(get_db), admin: User = Depends(require_admin)):
-    a = db.query(Achievement).filter(Achievement.id == aid).first()
-    if not a:
-        raise HTTPException(404, "Not found")
-    a.status = "rejected"
-    db.commit()
-    return {"ok": True}
 
-@app.get("/api/rating")
-def api_rating(db: DBSession = Depends(get_db), user: User = Depends(require_user)):
-    users = db.query(User).all()
-    achs = db.query(Achievement).filter(Achievement.status == "confirmed").all()
-    teacher_scores = {u.id: 0 for u in users}
-    for a in achs:
-        pts = LEVEL_POINTS.get(a.level, 0)
-        teacher_scores[a.teacher_id] = teacher_scores.get(a.teacher_id, 0) + pts
-    teachers_out = []
-    for u in users:
-        teachers_out.append({"id": u.id, "name": u.full_name or u.username, "school": u.school or "—", "score": teacher_scores.get(u.id, 0)})
-    schools = {}
-    counts = {}
-    for t in teachers_out:
-        s = t["school"]
-        schools[s] = schools.get(s, 0) + t["score"]
-        counts[s] = counts.get(s, 0) + 1
-    school_out = []
-    for s, total in schools.items():
-        cnt = counts[s]
-        avg = total / cnt if cnt else 0
-        school_out.append({"school": s, "total": total, "avg": round(avg, 2)})
-    teachers_out = sorted(teachers_out, key=lambda x: x["score"], reverse=True)
-    school_out = sorted(school_out, key=lambda x: x["avg"], reverse=True)
-    return {"teachers": teachers_out, "schools": school_out}
+@app.post("/achievement/{achievement_id}/approve")
+def approve_achievement(achievement_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=403)
+    
+    achievement = db.query(Achievement).filter(Achievement.id == achievement_id).first()
+    if achievement:
+        achievement.status = "approved"
+        db.commit()
+    return RedirectResponse(url="/dashboard", status_code=303)
 
-# Admin: create user
-@app.post("/create_user")
+
+@app.post("/achievement/{achievement_id}/reject")
+def reject_achievement(achievement_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=403)
+    
+    achievement = db.query(Achievement).filter(Achievement.id == achievement_id).first()
+    if achievement:
+        achievement.status = "rejected"
+        db.commit()
+    return RedirectResponse(url="/dashboard", status_code=303)
+
+
+@app.post("/achievement/{achievement_id}/delete")
+def delete_achievement(achievement_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if not user:
+        raise HTTPException(status_code=403)
+    
+    achievement = db.query(Achievement).filter(Achievement.id == achievement_id).first()
+    if achievement and (achievement.user_id == user.id or user.is_admin):
+        db.delete(achievement)
+        db.commit()
+    return RedirectResponse(url="/dashboard", status_code=303)
+
+
+@app.post("/create-user")
 def create_user(
-    request: Request,
     username: str = Form(...),
     password: str = Form(...),
-    full_name: str = Form(""),
-    role: str = Form("teacher"),
+    full_name: str = Form(...),
     school: str = Form(""),
-    subject: str = Form(""),
-    db: DBSession = Depends(get_db),
-    admin: User = Depends(require_admin)
+    is_admin: bool = Form(False),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    if get_user_by_username(db, username):
-        return templates.TemplateResponse(
-            "dashboard.html",
-            {"request": request, "user": admin, "error": "Пользователь существует", "level_labels": LEVEL_LABELS}
-        )
-
-    u = User(
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=403)
+    
+    if db.query(User).filter(User.username == username).first():
+        return RedirectResponse(url="/dashboard?error=username_exists", status_code=303)
+    
+    hashed_pw = hash_password(password)
+    new_user = User(
         username=username,
+        password_hash=hashed_pw,
         full_name=full_name,
-        password_hash=hash_password(password),
-        role=role,
         school=school,
-        subject=subject
+        is_admin=is_admin
     )
-
-    db.add(u)
+    db.add(new_user)
     db.commit()
-
-    return RedirectResponse(url="/dashboard", status_code=302)
+    return RedirectResponse(url="/dashboard?success=user_created", status_code=303)
