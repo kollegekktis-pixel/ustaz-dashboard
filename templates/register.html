@@ -1,0 +1,327 @@
+{% extends "layout.html" %}
+
+{% block title %}Регистрация - UstasSapa Lab{% endblock %}
+
+{% block content %}
+<style>
+    .register-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 120px);
+        padding: 2rem 1rem;
+    }
+
+    .register-card {
+        background: white;
+        border-radius: 24px;
+        padding: 3rem;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        width: 100%;
+        max-width: 500px;
+        animation: fadeInUp 0.6s ease;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .register-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .register-header h2 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #7030A0;
+        margin-bottom: 0.5rem;
+    }
+
+    .register-header p {
+        color: #718096;
+        font-size: 0.95rem;
+    }
+
+    .register-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-group label {
+        font-weight: 600;
+        color: #2d3748;
+        font-size: 0.9rem;
+    }
+
+    .form-group label .required {
+        color: #c53030;
+    }
+
+    .form-group label .optional {
+        color: #718096;
+        font-weight: 400;
+        font-size: 0.85rem;
+    }
+
+    .input-wrapper input {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: #f7fafc;
+    }
+
+    .input-wrapper input:focus {
+        outline: none;
+        border-color: #7030A0;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(112, 48, 160, 0.1);
+    }
+
+    .register-btn {
+        padding: 1rem;
+        background: #7030A0;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.05rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(112, 48, 160, 0.4);
+        margin-top: 0.5rem;
+    }
+
+    .register-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(112, 48, 160, 0.6);
+    }
+
+    .register-btn:active {
+        transform: translateY(0);
+    }
+
+    .error-message {
+        background: #fed7d7;
+        color: #c53030;
+        padding: 1rem;
+        border-radius: 12px;
+        text-align: center;
+        font-size: 0.9rem;
+        font-weight: 500;
+        animation: shake 0.5s ease;
+        margin-bottom: 1rem;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+    }
+
+    .login-link {
+        margin-top: 1.5rem;
+        text-align: center;
+        color: #718096;
+        font-size: 0.9rem;
+    }
+
+    .login-link a {
+        color: #7030A0;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .login-link a:hover {
+        text-decoration: underline;
+    }
+
+    .password-hint {
+        font-size: 0.8rem;
+        color: #718096;
+        margin-top: 0.25rem;
+    }
+
+    /* MOBILE RESPONSIVE */
+    @media (max-width: 768px) {
+        .register-card {
+            padding: 2rem 1.5rem;
+        }
+
+        .register-header h2 {
+            font-size: 1.5rem;
+        }
+
+        .input-wrapper input {
+            padding: 0.75rem 0.875rem;
+        }
+
+        .register-btn {
+            padding: 0.875rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .register-container {
+            padding: 1rem;
+        }
+
+        .register-card {
+            padding: 1.5rem 1rem;
+            border-radius: 20px;
+        }
+
+        .register-header h2 {
+            font-size: 1.35rem;
+        }
+
+        .register-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .register-form {
+            gap: 1rem;
+        }
+    }
+</style>
+
+<div class="register-container">
+    <div class="register-card">
+        <div class="register-header">
+            <h2>📝 Регистрация</h2>
+            <p>Создайте новый аккаунт учителя</p>
+        </div>
+
+        {% if error %}
+        <div class="error-message">
+            ⚠️ {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="post" class="register-form">
+            <div class="form-group">
+                <label for="username">
+                    Логин <span class="required">*</span>
+                </label>
+                <div class="input-wrapper">
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        placeholder="Введите логин"
+                        required
+                        minlength="3"
+                        autocomplete="username"
+                    >
+                </div>
+                <div class="password-hint">Минимум 3 символа</div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">
+                    Пароль <span class="required">*</span>
+                </label>
+                <div class="input-wrapper">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        placeholder="Придумайте пароль"
+                        required
+                        minlength="6"
+                        autocomplete="new-password"
+                    >
+                </div>
+                <div class="password-hint">Минимум 6 символов</div>
+            </div>
+
+            <div class="form-group">
+                <label for="password_confirm">
+                    Подтвердите пароль <span class="required">*</span>
+                </label>
+                <div class="input-wrapper">
+                    <input 
+                        type="password" 
+                        id="password_confirm" 
+                        name="password_confirm" 
+                        placeholder="Повторите пароль"
+                        required
+                        minlength="6"
+                        autocomplete="new-password"
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="full_name">
+                    ФИО <span class="optional">(необязательно)</span>
+                </label>
+                <div class="input-wrapper">
+                    <input 
+                        type="text" 
+                        id="full_name" 
+                        name="full_name" 
+                        placeholder="Иванов Иван Иванович"
+                        autocomplete="name"
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="school">
+                    Школа <span class="optional">(необязательно)</span>
+                </label>
+                <div class="input-wrapper">
+                    <input 
+                        type="text" 
+                        id="school" 
+                        name="school" 
+                        placeholder="Например: Школа №1"
+                        autocomplete="organization"
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="subject">
+                    Предмет <span class="optional">(необязательно)</span>
+                </label>
+                <div class="input-wrapper">
+                    <input 
+                        type="text" 
+                        id="subject" 
+                        name="subject" 
+                        placeholder="Например: Математика"
+                    >
+                </div>
+            </div>
+
+            <button type="submit" class="register-btn">
+                ✅ Зарегистрироваться
+            </button>
+        </form>
+
+        <div class="login-link">
+            Уже есть аккаунт? <a href="/login">Войти</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
