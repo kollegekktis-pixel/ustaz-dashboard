@@ -533,7 +533,6 @@ async def add_achievement(
     description: str = Form(""),
     category: str = Form("other"),
     level: str = Form("school"),
-    points: float = Form(0.0),
     file: Optional[UploadFile] = None,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -541,6 +540,16 @@ async def add_achievement(
 ):
     if not user:
         return RedirectResponse(url="/login")
+    
+    # АВТОМАТИЧЕСКОЕ НАЧИСЛЕНИЕ БАЛЛОВ ПО УРОВНЮ
+    LEVEL_POINTS = {
+        "school": 2,
+        "city": 3,
+        "regional": 4,
+        "national": 5,
+        "international": 6
+    }
+    points = LEVEL_POINTS.get(level, 0)
     
     file_path = None
     
@@ -575,7 +584,7 @@ async def add_achievement(
         category=category,
         level=level,
         file_path=file_path,
-        points=points,
+        points=points,  # АВТОМАТИЧЕСКИ НАЗНАЧЕННЫЕ БАЛЛЫ
         status="pending"
     )
     db.add(new_achievement)
