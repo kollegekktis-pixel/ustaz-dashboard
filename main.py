@@ -9,7 +9,7 @@ from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from itsdangerous import URLSafeTimedSerializer
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, ForeignKey, Boolean
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, ForeignKey, Boolean, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
 
@@ -23,21 +23,28 @@ if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
 if not DATABASE_URL:
     DATABASE_URL = "sqlite:///./db.sqlite3"
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {})
+print(f"🔌 Connecting to database: {DATABASE_URL[:30]}...")
+
+engine = create_engine(
+    DATABASE_URL, 
+    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {},
+    pool_pre_ping=True,
+    echo=True  # Включаем логирование SQL запросов
+)
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 
 # ===========================
-# MODELS
+# MODELS - ИСПРАВЛЕНО для PostgreSQL
 # ===========================
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, nullable=False, index=True)
-    password_hash = Column(String, nullable=False)
-    full_name = Column(String)
+    username = Column(String(255), unique=True, nullable=False, index=True)  # ИСПРАВЛЕНО
+    password_hash = Column(String(255), nullable=False)  # ИСПРАВЛЕНО
+    full_name = Column(String(255))  # ИСПРАВЛЕНО
     is_admin = Column(Boolean, default=False)
-    school = Column(String)
+    school = Column(String(255))  # ИСПРАВЛЕНО
     achievements = relationship("Achievement", back_populates="user")
 
     def check_password(self, password: str) -> bool:
@@ -49,18 +56,24 @@ class Achievement(Base):
     __tablename__ = "achievements"
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    title = Column(String, nullable=False)
-    description = Column(String)
-    category = Column(String)
-    level = Column(String)  # Уровень: школьный, городской и т.д.
-    file_path = Column(String)  # Путь к загруженному файлу
+    title = Column(String(500), nullable=False)  # ИСПРАВЛЕНО
+    description = Column(Text)  # ИСПРАВЛЕНО - используем Text для длинных текстов
+    category = Column(String(100))  # ИСПРАВЛЕНО
+    level = Column(String(100))  # ИСПРАВЛЕНО
+    file_path = Column(String(500))  # ИСПРАВЛЕНО
     points = Column(Float, default=0.0)
-    status = Column(String, default="pending")
+    status = Column(String(50), default="pending")  # ИСПРАВЛЕНО
     created_at = Column(DateTime, default=datetime.utcnow)
     user = relationship("User", back_populates="achievements")
 
 
-Base.metadata.create_all(bind=engine)
+# СОЗДАНИЕ ТАБЛИЦ с обработкой ошибок
+try:
+    Base.metadata.create_all(bind=engine)
+    print("✅ Database tables created successfully!")
+except Exception as e:
+    print(f"❌ Error creating tables: {e}")
+    raise
 
 # ===========================
 # PASSWORD HASHING
@@ -78,7 +91,6 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Создаём папку для загрузки файлов
-import os
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
@@ -392,16 +404,17 @@ def login_page(request: Request, lang: str = Depends(get_language)):
 
 @app.post("/login")
 def login_post(
+    request: Request,
     username: str = Form(...),
     password: str = Form(...),
     db: Session = Depends(get_db),
     lang: str = Depends(get_language)
 ):
+    t = lambda key: get_translation(lang, key)
     user = db.query(User).filter(User.username == username).first()
     if not user or not user.check_password(password):
-        t = lambda key: get_translation(lang, key)
         return templates.TemplateResponse("login.html", {
-            "request": {},
+            "request": request,
             "error": t("error_invalid_credentials"),
             "lang": lang,
             "t": t
@@ -427,6 +440,7 @@ def register_page(request: Request, lang: str = Depends(get_language)):
 
 @app.post("/register")
 def register_post(
+    request: Request,
     username: str = Form(...),
     password: str = Form(...),
     confirm_password: str = Form(...),
@@ -452,7 +466,7 @@ def register_post(
     
     if error:
         return templates.TemplateResponse("register.html", {
-            "request": {},
+            "request": request,
             "error": error,
             "lang": lang,
             "t": t
