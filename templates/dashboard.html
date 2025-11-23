@@ -1,505 +1,330 @@
 {% extends "layout.html" %}
-{% block title %}Панель - UstasSapa Lab{% endblock %}
+
+{% block title %}{{ t('dashboard') }} - {{ t('app_title') }}{% endblock %}
+
 {% block content %}
 
-<style>
-  /* Дополнительные стили для dashboard */
-  .achievement-item {
-    padding: 1.25rem;
-    border: 2px solid #FFFFFF;
-    margin-bottom: 1rem;
-    border-radius: 16px;
-    background: white;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  }
-
-  .achievement-item:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(112, 48, 160, 0.15);
-    border-color: #7030A0;
-  }
-
-  .achievement-header {
-    font-weight: 600;
-    font-size: 1.1rem;
-    color: #2d3748;
-    margin-bottom: 0.5rem;
-  }
-
-  .achievement-meta {
-    color: #718096;
-    font-size: 0.9rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .status-badge {
-    display: inline-block;
-    padding: 0.35rem 0.875rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    margin-top: 0.5rem;
-  }
-
-  .status-pending {
-    background: #fef3c7;
-    color: #92400e;
-  }
-
-  .status-confirmed {
-    background: #d1fae5;
-    color: #065f46;
-  }
-
-  .status-rejected {
-    background: #fee2e2;
-    color: #991b1b;
-  }
-
-  .admin-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
-  }
-
-  .achievement-admin {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
-  .achievement-content {
-    flex: 1;
-  }
-
-  .profile-info {
-    display: grid;
-    gap: 1rem;
-    margin-top: 1rem;
-  }
-
-  .profile-item {
-    padding: 1rem;
-    background: #f7fafc;
-    border-radius: 12px;
-    border: 2px solid #e2e8f0;
-  }
-
-  .profile-item strong {
-    color: #7030A0;
-    display: block;
-    margin-bottom: 0.25rem;
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 3rem 1rem;
-    color: #718096;
-  }
-
-  .empty-state svg {
-    width: 64px;
-    height: 64px;
-    margin: 0 auto 1rem;
-    opacity: 0.3;
-  }
-
-  /* Улучшенные таблицы */
-  .rating-table-wrapper {
-    overflow-x: auto;
-    margin-top: 1rem;
-    border-radius: 12px;
-    border: 2px solid #FFFFFF;
-  }
-
-  .section-title {
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: #2d3748;
-    margin: 1.5rem 0 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 3px solid #7030A0;
-  }
-
-  /* Адаптивность для мобильных */
-  @media (max-width: 768px) {
-    .achievement-admin {
-      flex-direction: column;
-    }
-
-    .admin-actions {
-      width: 100%;
-    }
-
-    .achievement-item {
-      padding: 1rem;
-    }
-
-    .section-title {
-      font-size: 1.1rem;
-    }
-  }
-</style>
-
-<div class="tabs card">
-  {% set tabs = ['profile','add','my'] %}
-  {% if user.role == 'admin' %} {% set tabs = tabs + ['admin','reports'] %} {% endif %}
-  {% for tab in tabs %}
-    <div class="tab" onclick="showTab('{{ tab }}')">
-      {% if tab == 'profile' %}👤 Профиль
-      {% elif tab == 'add' %}➕ Добавить достижение
-      {% elif tab == 'my' %}📋 Мои достижения
-      {% elif tab == 'admin' %}⚙️ Панель методиста
-      {% elif tab == 'reports' %}📊 Отчёты
-      {% endif %}
-    </div>
-  {% endfor %}
+<!-- TABS -->
+<div class="tabs">
+    <div class="tab" onclick="switchTab('profile')">👤 {{ t('profile') }}</div>
+    <div class="tab" onclick="switchTab('add-achievement')">➕ {{ t('add_achievement') }}</div>
+    <div class="tab" onclick="switchTab('my-achievements')">🏆 {{ t('my_achievements') }}</div>
+    {% if user.is_admin %}
+    <div class="tab" onclick="switchTab('admin')">⚙️ {{ t('admin_panel') }}</div>
+    {% endif %}
+    <div class="tab" onclick="switchTab('reports')">📊 {{ t('reports') }}</div>
 </div>
 
-<div id="content-area">
-  <!-- ПРОФИЛЬ -->
-  <div id="profile" class="card">
-    <h3>👤 Профиль пользователя</h3>
-    <div class="profile-info">
-      <div class="profile-item">
-        <strong>ФИО:</strong>
-        {{ user.full_name or user.username }}
-      </div>
-      <div class="profile-item">
-        <strong>Школа:</strong>
-        {{ user.school or '—' }}
-      </div>
-      <div class="profile-item">
-        <strong>Предмет:</strong>
-        {{ user.subject or '—' }}
-      </div>
-    </div>
-  </div>
+<!-- TAB 1: PROFILE -->
+<div id="profile" class="tab-content">
+    <div class="card">
+        <h2>{{ t('profile') }}</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+            <div style="background: linear-gradient(135deg, #7030A0, #9b59d0); color: white; padding: 1.5rem; border-radius: 12px;">
+                <div style="font-size: 2rem; font-weight: 700;">{{ t('welcome_user') }}</div>
+                <div style="font-size: 1.2rem; margin-top: 0.5rem;">{{ user.full_name or user.username }}</div>
+                {% if user.school %}
+                <div style="margin-top: 0.5rem; opacity: 0.9;">🏫 {{ user.school }}</div>
+                {% endif %}
+            </div>
 
-  <!-- ДОБАВИТЬ ДОСТИЖЕНИЕ -->
-  <div id="add" class="card" style="display:none">
-    <h3>➕ Добавить новое достижение</h3>
-    <form id="frmAdd" enctype="multipart/form-data">
-      <div class="form-row">
-        <label>Название достижения</label>
-        <input name="title" id="title" required placeholder="Например: Победитель олимпиады по математике"/>
-      </div>
+            {% set total_points = achievements|selectattr('status', 'equalto', 'approved')|map(attribute='points')|sum %}
+            {% set pending_count = achievements|selectattr('status', 'equalto', 'pending')|list|length %}
+            {% set approved_count = achievements|selectattr('status', 'equalto', 'approved')|list|length %}
 
-      <div class="form-row">
-        <label>Уровень мероприятия</label>
-        <select name="level" id="level">
-          <option value="school">🏫 Школьный (2 балла)</option>
-          <option value="city">🏙️ Городской (3 балла)</option>
-          <option value="region">🗺️ Областной (4 балла)</option>
-          <option value="republic">🏆 Республиканский (5 баллов)</option>
-        </select>
-      </div>
+            <div style="background: white; border: 2px solid #FFFFFF; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                <div style="color: #666; margin-bottom: 0.5rem;">{{ t('total_points') }}</div>
+                <div style="font-size: 2.5rem; font-weight: 700; color: #7030A0;">{{ total_points }}</div>
+            </div>
 
-      <div class="form-row">
-        <label>Дата достижения</label>
-        <input type="date" id="ach_date" name="date_val" required/>
-      </div>
+            <div style="background: white; border: 2px solid #FFFFFF; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                <div style="color: #666; margin-bottom: 0.5rem;">{{ t('pending_achievements') }}</div>
+                <div style="font-size: 2.5rem; font-weight: 700; color: #f39c12;">{{ pending_count }}</div>
+            </div>
 
-      <div class="form-row">
-        <label>Файл-подтверждение (по желанию)</label>
-        <input type="file" id="file" name="file" accept=".pdf,.png,.jpg,.jpeg"/>
-        <small class="muted" style="display: block; margin-top: 0.5rem;">
-          Допустимые форматы: PDF, PNG, JPG. Максимальный размер: 5 МБ
-        </small>
-      </div>
-
-      <div>
-        <button type="button" class="btn" onclick="submitAchievement()">
-          📤 Отправить на подтверждение
-        </button>
-      </div>
-      <div id="add-res" style="margin-top: 1rem;"></div>
-    </form>
-  </div>
-
-  <!-- МОИ ДОСТИЖЕНИЯ -->
-  <div id="my" class="card" style="display:none">
-    <h3>📋 Мои достижения</h3>
-    <div id="my-list">
-      <div style="text-align: center; padding: 2rem; color: #718096;">
-        Загрузка...
-      </div>
-    </div>
-  </div>
-
-  <!-- ПАНЕЛЬ АДМИНИСТРАТОРА -->
-  {% if user.role == 'admin' %}
-    <div id="admin" class="card" style="display:none">
-      <h3>⚙️ Подтверждение достижений</h3>
-      <div id="admin-list">
-        <div style="text-align: center; padding: 2rem; color: #718096;">
-          Загрузка...
+            <div style="background: white; border: 2px solid #FFFFFF; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                <div style="color: #666; margin-bottom: 0.5rem;">{{ t('approved_achievements') }}</div>
+                <div style="font-size: 2.5rem; font-weight: 700; color: #27ae60;">{{ approved_count }}</div>
+            </div>
         </div>
-      </div>
     </div>
-
-    <!-- ОТЧЁТЫ -->
-    <div id="reports" class="card" style="display:none">
-      <h3>📊 Рейтинг и статистика</h3>
-      <div id="rating-area">
-        <div style="text-align: center; padding: 2rem; color: #718096;">
-          Загрузка...
-        </div>
-      </div>
-    </div>
-  {% endif %}
 </div>
 
-<script>
-const showTab = name => {
-  document.querySelectorAll('#content-area > div').forEach(d=>d.style.display='none');
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  
-  const el = document.getElementById(name); 
-  if(el) el.style.display='block';
-  
-  const tabElements = document.querySelectorAll('.tab');
-  const tabMap = {'profile': 0, 'add': 1, 'my': 2, 'admin': 3, 'reports': 4};
-  if(tabMap[name] !== undefined) {
-    const index = tabMap[name];
-    if(tabElements[index]) tabElements[index].classList.add('active');
-  }
-  
-  if(name==='my') loadMy();
-  if(name==='admin') loadAdmin();
-  if(name==='reports') loadRating();
-};
+<!-- TAB 2: ADD ACHIEVEMENT -->
+<div id="add-achievement" class="tab-content">
+    <div class="card">
+        <h2>{{ t('add_achievement') }}</h2>
+        <form method="post" action="/add-achievement">
+            <div style="display: grid; gap: 1rem;">
+                <div>
+                    <label>{{ t('title') }} *</label>
+                    <input name="title" type="text" required placeholder="{{ t('title') }}">
+                </div>
 
-const apiGet = async url => {
-  const resp = await fetch(url);
-  if(resp.status===401){ location.href='/login'; return null; }
-  const ct = resp.headers.get('content-type')||''; 
-  if(!resp.ok && ct.includes('application/json')) try{ return await resp.json(); }catch(e){return null;}
-  if(ct.includes('application/json')) try{ return await resp.json(); }catch(e){return null;}
-  return null;
-};
+                <div>
+                    <label>{{ t('description') }}</label>
+                    <textarea name="description" rows="4" placeholder="{{ t('description') }}"></textarea>
+                </div>
 
-const getStatusLabel = status => {
-  const map = {
-    'pending': 'Ожидает проверки',
-    'confirmed': 'Подтверждено',
-    'rejected': 'Отклонено'
-  };
-  return map[status] || status;
-};
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>{{ t('category') }}</label>
+                        <select name="category">
+                            <option value="publications">{{ t('category_publications') }}</option>
+                            <option value="conferences">{{ t('category_conferences') }}</option>
+                            <option value="olympiads">{{ t('category_olympiads') }}</option>
+                            <option value="projects">{{ t('category_projects') }}</option>
+                            <option value="courses">{{ t('category_courses') }}</option>
+                            <option value="other">{{ t('category_other') }}</option>
+                        </select>
+                    </div>
 
-const renderAchievements = (data, id, isAdmin=false) => {
-  if(!data || data.length === 0) {
-    document.getElementById(id).innerHTML = `
-      <div class="empty-state">
-        <svg fill="currentColor" viewBox="0 0 20 20">
-          <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
-          <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"></path>
-        </svg>
-        <p>${isAdmin ? 'Нет новых заявок на проверку' : 'У вас пока нет достижений'}</p>
-      </div>
-    `;
-    return;
-  }
+                    <div>
+                        <label>{{ t('points') }}</label>
+                        <input name="points" type="number" step="0.1" value="0" min="0">
+                    </div>
+                </div>
 
-  const html = data.map(a => `
-    <div class="achievement-item ${isAdmin ? 'achievement-admin' : ''}">
-      <div class="achievement-content">
-        <div class="achievement-header">${a.title}</div>
-        <div class="achievement-meta">
-          ${isAdmin ? '👤 ' + a.teacher + ' • ' : ''}
-          📅 ${a.date} • ${a.level_label} • 🏅 ${a.points} балл(ов)
-        </div>
-        <span class="status-badge status-${a.status}">
-          ${getStatusLabel(a.status)}
-        </span>
-        ${!isAdmin && a.filename ? `
-          <div style="margin-top: 0.75rem;">
-            <a href="/file/${a.filename}" target="_blank" class="btn-ghost">
-              📎 Открыть файл
-            </a>
-          </div>
-        ` : ''}
-      </div>
-      ${isAdmin ? `
-        <div class="admin-actions">
-          ${a.filename ? `
-            <a class="btn-ghost" href="/file/${a.filename}" target="_blank" style="text-align: center;">
-              📎 Открыть файл
-            </a>
-          ` : ''}
-          <button class="btn" onclick="confirmAchievement(${a.id})">
-            ✅ Подтвердить
-          </button>
-          <button class="btn-ghost" onclick="rejectAchievement(${a.id})">
-            ❌ Отклонить
-          </button>
-        </div>
-      ` : ''}
+                <button type="submit" style="margin-top: 1rem;">💾 {{ t('save') }}</button>
+            </div>
+        </form>
     </div>
-  `).join('');
-  
-  document.getElementById(id).innerHTML = html;
-};
+</div>
 
-const loadMy = async() => { 
-  const data = await apiGet('/api/achievements'); 
-  if(data) renderAchievements(data, 'my-list'); 
-};
-
-const loadAdmin = async() => { 
-  const data = await apiGet('/api/achievements'); 
-  if(data) renderAchievements(data, 'admin-list', true); 
-};
-
-const loadRating = async() => {
-  const data = await apiGet('/api/rating'); 
-  if(!data) return;
-  
-  let html = `
-    <div class="section-title">🏆 Топ-10 учителей</div>
-    <div class="rating-table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Место</th>
-            <th>Учитель</th>
-            <th>Школа</th>
-            <th>Баллы</th>
-          </tr>
-        </thead>
-        <tbody>
-  `;
-  
-  data.teachers.slice(0, 10).forEach((t, index) => { 
-    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : (index + 1);
-    html += `
-      <tr>
-        <td style="font-weight: 600;">${medal}</td>
-        <td>${t.name}</td>
-        <td>${t.school}</td>
-        <td style="font-weight: 600; color: #7030A0;">${t.score}</td>
-      </tr>
-    `; 
-  });
-  
-  html += `
-        </tbody>
-      </table>
+<!-- TAB 3: MY ACHIEVEMENTS -->
+<div id="my-achievements" class="tab-content">
+    <div class="card">
+        <h2>{{ t('my_achievements') }}</h2>
+        
+        {% if achievements %}
+        <div style="display: grid; gap: 1rem; margin-top: 1.5rem;">
+            {% for ach in achievements %}
+            <div style="background: white; border: 2px solid #FFFFFF; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); transition: all 0.3s ease;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                    <div style="flex: 1;">
+                        <h3 style="color: #7030A0; margin-bottom: 0.5rem;">{{ ach.title }}</h3>
+                        {% if ach.description %}
+                        <p style="color: #666; margin-bottom: 0.5rem;">{{ ach.description }}</p>
+                        {% endif %}
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.75rem;">
+                            <span style="background: #f0f0f0; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">
+                                📁 {{ t('category_' + ach.category) }}
+                            </span>
+                            <span style="background: #7030A0; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; font-weight: 600;">
+                                ⭐ {{ ach.points }} {{ t('points') }}
+                            </span>
+                            {% if ach.status == 'pending' %}
+                            <span class="badge pending">⏳ {{ t('status_pending') }}</span>
+                            {% elif ach.status == 'approved' %}
+                            <span class="badge approved">✅ {{ t('status_approved') }}</span>
+                            {% else %}
+                            <span class="badge rejected">❌ {{ t('status_rejected') }}</span>
+                            {% endif %}
+                            <span style="color: #999; font-size: 0.85rem;">📅 {{ ach.created_at.strftime('%Y-%m-%d') }}</span>
+                        </div>
+                    </div>
+                    <form method="post" action="/achievement/{{ ach.id }}/delete" style="margin-left: 1rem;">
+                        <button type="submit" onclick="return confirm('{{ t('delete') }}?')" 
+                                style="background: #dc3545; padding: 0.5rem 1rem; font-size: 0.9rem;">
+                            🗑️ {{ t('delete') }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="text-align: center; color: #999; padding: 2rem;">{{ t('my_achievements') }} 📝</p>
+        {% endif %}
     </div>
-    
-    <div class="section-title">🏫 Рейтинг школ (средний балл)</div>
-    <div class="rating-table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Место</th>
-            <th>Школа</th>
-            <th>Средний балл</th>
-            <th>Всего баллов</th>
-          </tr>
-        </thead>
-        <tbody>
-  `;
-  
-  data.schools.forEach((s, index) => { 
-    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : (index + 1);
-    html += `
-      <tr>
-        <td style="font-weight: 600;">${medal}</td>
-        <td>${s.school}</td>
-        <td style="font-weight: 600; color: #7030A0;">${s.avg}</td>
-        <td>${s.total}</td>
-      </tr>
-    `; 
-  });
-  
-  html += '</tbody></table></div>';
-  document.getElementById('rating-area').innerHTML = html;
-};
+</div>
 
-const submitAchievement = async () => {
-  const title = document.getElementById('title').value.trim();
-  const level = document.getElementById('level').value;
-  const dateVal = document.getElementById('ach_date').value;
-  const file = document.getElementById('file').files[0];
-  
-  if(!title || !dateVal) { 
-    document.getElementById('add-res').innerHTML = '<div style="color: #c53030; padding: 1rem; background: #fed7d7; border-radius: 12px;">⚠️ Введите название и дату</div>'; 
-    return; 
-  }
-  
-  if(file) { 
-    const max = 5*1024*1024;
-    const allowed = ['application/pdf','image/png','image/jpeg','image/jpg']; 
-    
-    if(file.size > max) { 
-      document.getElementById('add-res').innerHTML = '<div style="color: #c53030; padding: 1rem; background: #fed7d7; border-radius: 12px;">⚠️ Файл слишком большой (макс 5 МБ)</div>'; 
-      return; 
-    }
-    
-    if(!allowed.includes(file.type)) { 
-      document.getElementById('add-res').innerHTML = '<div style="color: #c53030; padding: 1rem; background: #fed7d7; border-radius: 12px;">⚠️ Недопустимый тип файла. Допустимы: PDF, PNG, JPG</div>'; 
-      return; 
-    }
-  }
-  
-  const form = new FormData(); 
-  form.append('title', title); 
-  form.append('level', level); 
-  form.append('date_val', dateVal); 
-  if(file) form.append('file', file);
-  
-  const csrfMeta = document.querySelector('meta[name="csrf-token"]'); 
-  const headers = {}; 
-  if(csrfMeta) headers['X-CSRFToken'] = csrfMeta.getAttribute('content');
-  
-  const resp = await fetch('/api/achievements', {method: 'POST', body: form, headers});
-  
-  if(resp.ok) { 
-    document.getElementById('add-res').innerHTML = '<div style="color: #065f46; padding: 1rem; background: #d1fae5; border-radius: 12px;">✅ Достижение успешно отправлено на подтверждение</div>'; 
-    document.getElementById('frmAdd').reset(); 
-  } else { 
-    let msg = 'Ошибка отправки'; 
-    try { 
-      const j = await resp.json(); 
-      if(j && j.error) msg = j.error; 
-    } catch(e) {}
-    document.getElementById('add-res').innerHTML = `<div style="color: #c53030; padding: 1rem; background: #fed7d7; border-radius: 12px;">⚠️ ${msg}</div>`; 
-  }
-};
+<!-- TAB 4: ADMIN PANEL -->
+{% if user.is_admin %}
+<div id="admin" class="tab-content">
+    <!-- CREATE USER -->
+    <div class="card">
+        <h2>{{ t('create_user') }}</h2>
+        <form method="post" action="/create-user">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <input name="username" placeholder="{{ t('username') }}" required>
+                <input name="password" type="password" placeholder="{{ t('password') }}" required>
+                <input name="full_name" placeholder="{{ t('full_name') }}" required>
+                <input name="school" placeholder="{{ t('school') }}">
+                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" name="is_admin">
+                    {{ t('admin_role') }}
+                </label>
+                <button type="submit">➕ {{ t('create_user') }}</button>
+            </div>
+        </form>
+    </div>
 
-const confirmAchievement = async id => { 
-  const csrfMeta = document.querySelector('meta[name="csrf-token"]'); 
-  const headers = {}; 
-  if(csrfMeta) headers['X-CSRFToken'] = csrfMeta.getAttribute('content'); 
-  const resp = await fetch('/api/achievements/' + id + '/confirm', {method: 'POST', headers}); 
-  if(!resp.ok) { 
-    alert('❌ Не удалось подтвердить достижение'); 
-  } else {
-    alert('✅ Достижение успешно подтверждено');
-  }
-  loadAdmin(); 
-};
+    <!-- ALL USERS -->
+    <div class="card">
+        <h2>{{ t('all_users') }}</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>{{ t('username') }}</th>
+                    <th>{{ t('full_name') }}</th>
+                    <th>{{ t('school') }}</th>
+                    <th>{{ t('admin_role') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in all_users %}
+                <tr>
+                    <td>{{ u.id }}</td>
+                    <td>{{ u.username }}</td>
+                    <td>{{ u.full_name }}</td>
+                    <td>{{ u.school or '-' }}</td>
+                    <td>{% if u.is_admin %}✅{% else %}❌{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-const rejectAchievement = async id => { 
-  const csrfMeta = document.querySelector('meta[name="csrf-token"]'); 
-  const headers = {}; 
-  if(csrfMeta) headers['X-CSRFToken'] = csrfMeta.getAttribute('content'); 
-  const resp = await fetch('/api/achievements/' + id + '/reject', {method: 'POST', headers}); 
-  if(!resp.ok) { 
-    alert('❌ Не удалось отклонить достижение'); 
-  } else {
-    alert('✅ Достижение отклонено');
-  }
-  loadAdmin(); 
-};
+    <!-- PENDING ACHIEVEMENTS -->
+    <div class="card">
+        <h2>{{ t('pending_review') }}</h2>
+        {% if pending_achievements %}
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ t('teacher') }}</th>
+                    <th>{{ t('title') }}</th>
+                    <th>{{ t('category') }}</th>
+                    <th>{{ t('points') }}</th>
+                    <th>{{ t('date') }}</th>
+                    <th>{{ t('actions') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ach in pending_achievements %}
+                <tr>
+                    <td>{{ ach.user.full_name or ach.user.username }}</td>
+                    <td>{{ ach.title }}</td>
+                    <td>{{ t('category_' + ach.category) }}</td>
+                    <td>{{ ach.points }}</td>
+                    <td>{{ ach.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <form method="post" action="/achievement/{{ ach.id }}/approve" style="display: inline;">
+                                <button type="submit" style="background: #27ae60; padding: 0.5rem 1rem; font-size: 0.85rem;">
+                                    ✅ {{ t('approve') }}
+                                </button>
+                            </form>
+                            <form method="post" action="/achievement/{{ ach.id }}/reject" style="display: inline;">
+                                <button type="submit" style="background: #e74c3c; padding: 0.5rem 1rem; font-size: 0.85rem;">
+                                    ❌ {{ t('reject') }}
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="text-align: center; color: #999; padding: 2rem;">{{ t('pending_review') }} ✅</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
 
-// Инициализация
-showTab('profile');
-</script>
+<!-- TAB 5: REPORTS -->
+<div id="reports" class="tab-content">
+    <!-- TOP TEACHERS -->
+    <div class="card">
+        <h2>{{ t('top_teachers') }}</h2>
+        {% set teacher_points = {} %}
+        {% for u in all_users if not u.is_admin %}
+            {% set points = u.achievements|selectattr('status', 'equalto', 'approved')|map(attribute='points')|sum %}
+            {% if points > 0 %}
+                {% set _ = teacher_points.update({u.id: {'user': u, 'points': points}}) %}
+            {% endif %}
+        {% endfor %}
+        {% set sorted_teachers = teacher_points.values()|sort(attribute='points', reverse=True) %}
+        
+        {% if sorted_teachers %}
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ t('rank') }}</th>
+                    <th>{{ t('teacher') }}</th>
+                    <th>{{ t('school') }}</th>
+                    <th>{{ t('points') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in sorted_teachers[:10] %}
+                <tr>
+                    <td>
+                        {% if loop.index == 1 %}🥇
+                        {% elif loop.index == 2 %}🥈
+                        {% elif loop.index == 3 %}🥉
+                        {% else %}{{ loop.index }}
+                        {% endif %}
+                    </td>
+                    <td>{{ item.user.full_name or item.user.username }}</td>
+                    <td>{{ item.user.school or '-' }}</td>
+                    <td style="font-weight: 700; color: #7030A0;">{{ item.points }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="text-align: center; color: #999; padding: 2rem;">{{ t('top_teachers') }} 📊</p>
+        {% endif %}
+    </div>
+
+    <!-- SCHOOL RATINGS -->
+    <div class="card">
+        <h2>{{ t('school_ratings') }}</h2>
+        {% set school_stats = {} %}
+        {% for u in all_users if not u.is_admin and u.school %}
+            {% if u.school not in school_stats %}
+                {% set _ = school_stats.update({u.school: {'points': 0, 'teachers': 0}}) %}
+            {% endif %}
+            {% set points = u.achievements|selectattr('status', 'equalto', 'approved')|map(attribute='points')|sum %}
+            {% set _ = school_stats[u.school].update({'points': school_stats[u.school].points + points, 'teachers': school_stats[u.school].teachers + 1}) %}
+        {% endfor %}
+        {% set sorted_schools = school_stats.items()|sort(attribute='1.points', reverse=True) %}
+        
+        {% if sorted_schools %}
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ t('rank') }}</th>
+                    <th>{{ t('school') }}</th>
+                    <th>{{ t('total_teachers') }}</th>
+                    <th>{{ t('total_points') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for school, stats in sorted_schools %}
+                <tr>
+                    <td>
+                        {% if loop.index == 1 %}🥇
+                        {% elif loop.index == 2 %}🥈
+                        {% elif loop.index == 3 %}🥉
+                        {% else %}{{ loop.index }}
+                        {% endif %}
+                    </td>
+                    <td>{{ school }}</td>
+                    <td>{{ stats.teachers }}</td>
+                    <td style="font-weight: 700; color: #7030A0;">{{ stats.points }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="text-align: center; color: #999; padding: 2rem;">{{ t('school_ratings') }} 🏫</p>
+        {% endif %}
+    </div>
+</div>
 
 {% endblock %}
