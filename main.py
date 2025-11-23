@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Optional
 
 import bcrypt
-from fastapi import FastAPI, Request, Form, Depends, HTTPException, Cookie
+from fastapi import FastAPI, Request, Form, Depends, HTTPException, Cookie, UploadFile
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -52,6 +52,8 @@ class Achievement(Base):
     title = Column(String, nullable=False)
     description = Column(String)
     category = Column(String)
+    level = Column(String)  # Уровень: школьный, городской и т.д.
+    file_path = Column(String)  # Путь к загруженному файлу
     points = Column(Float, default=0.0)
     status = Column(String, default="pending")
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -74,6 +76,13 @@ def hash_password(password: str) -> str:
 # ===========================
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Создаём папку для загрузки файлов
+import os
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
 templates = Jinja2Templates(directory="templates")
 
 SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_hex(32))
@@ -127,6 +136,8 @@ TRANSLATIONS = {
         "title": "Название",
         "description": "Описание",
         "category": "Категория",
+        "level": "Уровень",
+        "file": "Файл (макс. 5 МБ)",
         "points": "Баллы",
         "status": "Статус",
         "date": "Дата",
@@ -136,6 +147,7 @@ TRANSLATIONS = {
         "delete": "Удалить",
         "save": "Сохранить",
         "cancel": "Отмена",
+        "download": "Скачать",
         
         # Категории
         "category_publications": "Публикации",
@@ -144,6 +156,13 @@ TRANSLATIONS = {
         "category_projects": "Проекты",
         "category_courses": "Курсы",
         "category_other": "Другое",
+        
+        # Уровни
+        "level_school": "Школьный",
+        "level_city": "Городской",
+        "level_regional": "Областной",
+        "level_national": "Республиканский",
+        "level_international": "Международный",
         
         # Статусы
         "status_pending": "Ожидает",
@@ -170,6 +189,7 @@ TRANSLATIONS = {
         "error_passwords_dont_match": "Пароли не совпадают",
         "error_short_username": "Логин должен быть минимум 3 символа",
         "error_short_password": "Пароль должен быть минимум 6 символов",
+        "error_file_too_large": "Файл слишком большой (макс. 5 МБ)",
         "success_registered": "Регистрация успешна!",
         "success_achievement_added": "Достижение добавлено!",
         "success_user_created": "Пользователь создан!",
@@ -216,6 +236,8 @@ TRANSLATIONS = {
         "title": "Атауы",
         "description": "Сипаттама",
         "category": "Санат",
+        "level": "Деңгей",
+        "file": "Файл (макс. 5 МБ)",
         "points": "Ұпайлар",
         "status": "Мәртебе",
         "date": "Күні",
@@ -225,6 +247,7 @@ TRANSLATIONS = {
         "delete": "Жою",
         "save": "Сақтау",
         "cancel": "Болдырмау",
+        "download": "Жүктеп алу",
         
         # Санаттар
         "category_publications": "Жарияланымдар",
@@ -233,6 +256,13 @@ TRANSLATIONS = {
         "category_projects": "Жобалар",
         "category_courses": "Курстар",
         "category_other": "Басқа",
+        
+        # Деңгейлер
+        "level_school": "Мектептік",
+        "level_city": "Қалалық",
+        "level_regional": "Облыстық",
+        "level_national": "Республикалық",
+        "level_international": "Халықаралық",
         
         # Мәртебелер
         "status_pending": "Күтуде",
@@ -259,6 +289,7 @@ TRANSLATIONS = {
         "error_passwords_dont_match": "Құпия сөздер сәйкес келмейді",
         "error_short_username": "Логин кемінде 3 таңба болуы керек",
         "error_short_password": "Құпия сөз кемінде 6 таңба болуы керек",
+        "error_file_too_large": "Файл тым үлкен (макс. 5 МБ)",
         "success_registered": "Тіркелу сәтті өтті!",
         "success_achievement_added": "Жетістік қосылды!",
         "success_user_created": "Пайдаланушы жасалды!",
@@ -483,22 +514,53 @@ def dashboard(
 
 
 @app.post("/add-achievement")
-def add_achievement(
+async def add_achievement(
     title: str = Form(...),
     description: str = Form(""),
     category: str = Form("other"),
+    level: str = Form("school"),
     points: float = Form(0.0),
+    file: Optional[UploadFile] = None,
     user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    lang: str = Depends(get_language)
 ):
     if not user:
         return RedirectResponse(url="/login")
+    
+    file_path = None
+    
+    # Обработка загрузки файла
+    if file and file.filename:
+        # Проверка размера файла (5 МБ = 5 * 1024 * 1024 байт)
+        content = await file.read()
+        if len(content) > 5 * 1024 * 1024:
+            t = lambda key: get_translation(lang, key)
+            return templates.TemplateResponse("dashboard.html", {
+                "request": {},
+                "user": user,
+                "achievements": db.query(Achievement).filter(Achievement.user_id == user.id).all(),
+                "error": t("error_file_too_large"),
+                "lang": lang,
+                "t": t
+            })
+        
+        # Сохранение файла
+        import uuid
+        file_ext = file.filename.split(".")[-1]
+        unique_filename = f"{uuid.uuid4()}.{file_ext}"
+        file_path = os.path.join(UPLOAD_DIR, unique_filename)
+        
+        with open(file_path, "wb") as f:
+            f.write(content)
     
     new_achievement = Achievement(
         user_id=user.id,
         title=title,
         description=description,
         category=category,
+        level=level,
+        file_path=file_path,
         points=points,
         status="pending"
     )
