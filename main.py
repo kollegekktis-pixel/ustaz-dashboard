@@ -159,7 +159,7 @@ ALLOW_REGISTRATION = os.getenv("ALLOW_REGISTRATION", "true").lower() == "true"
 # ===========================
 TRANSLATIONS = {
     "ru": {
-        "app_title": "UstasSapa Lab",
+        "app_title": "Jetistik Hub",
         "app_subtitle": "Рейтинговая система оценки достижений учителя",
         "language": "Язык",
         "login": "Войти",
@@ -264,7 +264,7 @@ TRANSLATIONS = {
         "success_user_created": "Пользователь создан!",
     },
     "kk": {
-        "app_title": "UstasSapa Lab",
+        "app_title": "Jetistik Hub",
         "app_subtitle": "Мұғалімнің жетістіктерін бағалау рейтингтік жүйесі",
         "language": "Тіл",
         "login": "Кіру",
@@ -283,7 +283,7 @@ TRANSLATIONS = {
         "social_activity": "Қоғамдық-әлеуметтік белсенділік",
         "educational_activity": "Тәрбиелік белсенділік",
         
-        "welcome": "UstasSapa Lab",
+        "welcome": "Jetistik Hub",
         "login_subtitle": "Жүйеге кіріңіз",
         "username": "Логин",
         "password": "Құпия сөз",
@@ -725,3 +725,4 @@ def create_user(
     db.add(new_user)
     db.commit()
     return RedirectResponse(url="/dashboard?success=user_created", status_code=303)
+
