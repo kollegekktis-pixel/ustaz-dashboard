@@ -29,22 +29,28 @@ engine = create_engine(
     DATABASE_URL, 
     connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {},
     pool_pre_ping=True,
-    echo=True  # Включаем логирование SQL запросов
+    echo=True
 )
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 
 # ===========================
-# MODELS - ИСПРАВЛЕНО для PostgreSQL
+# MODELS - ОБНОВЛЕНО
 # ===========================
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(255), unique=True, nullable=False, index=True)  # ИСПРАВЛЕНО
-    password_hash = Column(String(255), nullable=False)  # ИСПРАВЛЕНО
-    full_name = Column(String(255))  # ИСПРАВЛЕНО
+    username = Column(String(255), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    full_name = Column(String(255))
     is_admin = Column(Boolean, default=False)
-    school = Column(String(255))  # ИСПРАВЛЕНО
+    school = Column(String(255))
+    
+    # НОВЫЕ ПОЛЯ
+    category = Column(String(100))  # Категория учителя (молодой специалист, 2 категория и т.д.)
+    subject = Column(String(255))   # Предмет
+    experience = Column(Integer)    # Стаж работы (в годах)
+    
     achievements = relationship("Achievement", back_populates="user")
 
     def check_password(self, password: str) -> bool:
@@ -56,18 +62,25 @@ class Achievement(Base):
     __tablename__ = "achievements"
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    title = Column(String(500), nullable=False)  # ИСПРАВЛЕНО
-    description = Column(Text)  # ИСПРАВЛЕНО - используем Text для длинных текстов
-    category = Column(String(100))  # ИСПРАВЛЕНО
-    level = Column(String(100))  # ИСПРАВЛЕНО
-    file_path = Column(String(500))  # ИСПРАВЛЕНО
+    
+    # НОВАЯ СТРУКТУРА
+    achievement_type = Column(String(100), nullable=False)  # student, teacher, social, educational
+    student_name = Column(String(255))  # ФИО ученика (только для достижений ученика)
+    
+    title = Column(String(500), nullable=False)
+    description = Column(Text)
+    category = Column(String(100))  # Конкурсы, Олимпиада, Проекты, Обмен опыта, Методические пособия
+    level = Column(String(100))     # city, regional, national, international
+    place = Column(String(50))      # 1, 2, 3, certificate
+    file_path = Column(String(500))
     points = Column(Float, default=0.0)
-    status = Column(String(50), default="pending")  # ИСПРАВЛЕНО
+    status = Column(String(50), default="pending")
     created_at = Column(DateTime, default=datetime.utcnow)
+    
     user = relationship("User", back_populates="achievements")
 
 
-# СОЗДАНИЕ ТАБЛИЦ с обработкой ошибок
+# СОЗДАНИЕ ТАБЛИЦ
 try:
     Base.metadata.create_all(bind=engine)
     print("✅ Database tables created successfully!")
@@ -85,12 +98,51 @@ def hash_password(password: str) -> str:
 
 
 # ===========================
+# POINTS CALCULATION - НОВАЯ СИСТЕМА
+# ===========================
+def calculate_points(level: str, place: str) -> float:
+    """
+    Рассчитывает баллы по новой системе
+    
+    Уровни: city, regional, national, international
+    Места: 1, 2, 3, certificate
+    """
+    POINTS_TABLE = {
+        "1": {
+            "city": 35,
+            "regional": 40,
+            "national": 45,
+            "international": 50
+        },
+        "2": {
+            "city": 30,
+            "regional": 35,
+            "national": 40,
+            "international": 45
+        },
+        "3": {
+            "city": 25,
+            "regional": 30,
+            "national": 35,
+            "international": 40
+        },
+        "certificate": {
+            "city": 10,
+            "regional": 15,
+            "national": 20,
+            "international": 25
+        }
+    }
+    
+    return POINTS_TABLE.get(place, {}).get(level, 0)
+
+
+# ===========================
 # APP SETUP
 # ===========================
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Создаём папку для загрузки файлов
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
@@ -103,11 +155,10 @@ serializer = URLSafeTimedSerializer(SECRET_KEY)
 ALLOW_REGISTRATION = os.getenv("ALLOW_REGISTRATION", "true").lower() == "true"
 
 # ===========================
-# TRANSLATIONS
+# TRANSLATIONS - ОБНОВЛЕНО
 # ===========================
 TRANSLATIONS = {
     "ru": {
-        # Общее
         "app_title": "UstasSapa Lab",
         "app_subtitle": "Рейтинговая система оценки достижений учителя",
         "language": "Язык",
@@ -121,15 +172,19 @@ TRANSLATIONS = {
         "admin_panel": "Админ-панель",
         "reports": "Отчёты",
         
-        # Логин
-        "welcome": "UstasSapa Lab",
+        # НОВЫЕ ВКЛАДКИ ДОСТИЖЕНИЙ
+        "student_achievements": "Достижения ученика",
+        "teacher_achievements": "Достижения педагога",
+        "social_activity": "Общественно-социальная активность",
+        "educational_activity": "Воспитательная активность",
+        
+        "welcome": "Jetistik Hub",
         "login_subtitle": "Войдите в систему",
         "username": "Логин",
         "password": "Пароль",
         "no_account": "Нет аккаунта?",
         "register_here": "Зарегистрируйтесь здесь",
         
-        # Регистрация
         "registration": "Регистрация",
         "registration_subtitle": "Создайте новый аккаунт",
         "full_name": "ФИО",
@@ -138,17 +193,19 @@ TRANSLATIONS = {
         "have_account": "Уже есть аккаунт?",
         "login_here": "Войдите здесь",
         
-        # Профиль
+        # НОВЫЕ ПОЛЯ ПРОФИЛЯ
+        "category": "Категория",
+        "subject": "Предмет",
+        "experience": "Стаж (лет)",
+        "student_name": "ФИО ученика",
+        
         "welcome_user": "Добро пожаловать",
         "total_points": "Всего баллов",
         "pending_achievements": "Ожидают проверки",
         "approved_achievements": "Подтверждено",
         
-        # Достижения
         "title": "Название",
         "description": "Описание",
-        "category": "Категория",
-        "level": "Уровень",
         "file": "Файл (макс. 5 МБ)",
         "points": "Баллы",
         "status": "Статус",
@@ -161,41 +218,41 @@ TRANSLATIONS = {
         "cancel": "Отмена",
         "download": "Скачать",
         
-        # Категории
-        "category_publications": "Публикации",
-        "category_conferences": "Конференции",
-        "category_olympiads": "Олимпиады",
+        # КАТЕГОРИИ - ОБНОВЛЕНО
+        "category_competitions": "Конкурсы",
+        "category_olympiads": "Олимпиада",
         "category_projects": "Проекты",
-        "category_courses": "Курсы",
-        "category_other": "Другое",
+        "category_experience_exchange": "Обмен опыта",
+        "category_methodical": "Методические пособия",
         
-        # Уровни
-        "level_school": "Школьный",
+        # УРОВНИ
         "level_city": "Городской",
         "level_regional": "Областной",
         "level_national": "Республиканский",
         "level_international": "Международный",
         
-        # Статусы
+        # МЕСТА
+        "place_1": "1 место",
+        "place_2": "2 место",
+        "place_3": "3 место",
+        "place_certificate": "Сертификат участника",
+        
         "status_pending": "Ожидает",
         "status_approved": "Подтверждено",
         "status_rejected": "Отклонено",
         
-        # Рейтинг
         "top_teachers": "Топ-10 учителей",
         "rank": "Место",
         "teacher": "Учитель",
         "school_ratings": "Рейтинг школ",
         "total_teachers": "Всего учителей",
         
-        # Админ
         "all_users": "Все пользователи",
         "create_user": "Создать пользователя",
         "pending_review": "На проверке",
         "admin_role": "Админ",
         "teacher_role": "Учитель",
         
-        # Сообщения
         "error_invalid_credentials": "Неверный логин или пароль",
         "error_username_exists": "Логин уже занят",
         "error_passwords_dont_match": "Пароли не совпадают",
@@ -207,7 +264,6 @@ TRANSLATIONS = {
         "success_user_created": "Пользователь создан!",
     },
     "kk": {
-        # Жалпы
         "app_title": "UstasSapa Lab",
         "app_subtitle": "Мұғалімнің жетістіктерін бағалау рейтингтік жүйесі",
         "language": "Тіл",
@@ -221,7 +277,12 @@ TRANSLATIONS = {
         "admin_panel": "Әкімші панелі",
         "reports": "Есептер",
         
-        # Кіру
+        # НОВЫЕ ВКЛАДКИ
+        "student_achievements": "Оқушылардың жетістіктері",
+        "teacher_achievements": "Мұғалімнің жетістіктері",
+        "social_activity": "Қоғамдық-әлеуметтік белсенділік",
+        "educational_activity": "Тәрбиелік белсенділік",
+        
         "welcome": "UstasSapa Lab",
         "login_subtitle": "Жүйеге кіріңіз",
         "username": "Логин",
@@ -229,7 +290,6 @@ TRANSLATIONS = {
         "no_account": "Аккаунт жоқ па?",
         "register_here": "Мұнда тіркеліңіз",
         
-        # Тіркелу
         "registration": "Тіркелу",
         "registration_subtitle": "Жаңа аккаунт жасаңыз",
         "full_name": "Аты-жөні",
@@ -238,17 +298,19 @@ TRANSLATIONS = {
         "have_account": "Аккаунт бар ма?",
         "login_here": "Мұнда кіріңіз",
         
-        # Профиль
+        # НОВЫЕ ПОЛЯ
+        "category": "Санат",
+        "subject": "Пән",
+        "experience": "Еңбек өтілі (жыл)",
+        "student_name": "Оқушының аты-жөні",
+        
         "welcome_user": "Қош келдіңіз",
         "total_points": "Барлық ұпайлар",
         "pending_achievements": "Тексеруді күтуде",
         "approved_achievements": "Расталған",
         
-        # Жетістіктер
         "title": "Атауы",
         "description": "Сипаттама",
-        "category": "Санат",
-        "level": "Деңгей",
         "file": "Файл (макс. 5 МБ)",
         "points": "Ұпайлар",
         "status": "Мәртебе",
@@ -261,41 +323,41 @@ TRANSLATIONS = {
         "cancel": "Болдырмау",
         "download": "Жүктеп алу",
         
-        # Санаттар
-        "category_publications": "Жарияланымдар",
-        "category_conferences": "Конференциялар",
-        "category_olympiads": "Олимпиадалар",
+        # КАТЕГОРИИ
+        "category_competitions": "Байқаулар",
+        "category_olympiads": "Олимпиада",
         "category_projects": "Жобалар",
-        "category_courses": "Курстар",
-        "category_other": "Басқа",
+        "category_experience_exchange": "Тәжірибе алмасу",
+        "category_methodical": "Әдістемелік құралдар",
         
-        # Деңгейлер
-        "level_school": "Мектептік",
+        # УРОВНИ
         "level_city": "Қалалық",
         "level_regional": "Облыстық",
         "level_national": "Республикалық",
         "level_international": "Халықаралық",
         
-        # Мәртебелер
+        # МЕСТА
+        "place_1": "1 орын",
+        "place_2": "2 орын",
+        "place_3": "3 орын",
+        "place_certificate": "Қатысқан сертификат",
+        
         "status_pending": "Күтуде",
         "status_approved": "Расталған",
         "status_rejected": "Қабылданбаған",
         
-        # Рейтинг
         "top_teachers": "Топ-10 мұғалімдер",
         "rank": "Орын",
         "teacher": "Мұғалім",
         "school_ratings": "Мектептер рейтингі",
         "total_teachers": "Барлық мұғалімдер",
         
-        # Әкімші
         "all_users": "Барлық пайдаланушылар",
         "create_user": "Пайдаланушы жасау",
         "pending_review": "Тексеруде",
         "admin_role": "Әкімші",
         "teacher_role": "Мұғалім",
         
-        # Хабарламалар
         "error_invalid_credentials": "Логин немесе құпия сөз қате",
         "error_username_exists": "Логин бос емес",
         "error_passwords_dont_match": "Құпия сөздер сәйкес келмейді",
@@ -309,7 +371,6 @@ TRANSLATIONS = {
 }
 
 def get_translation(lang: str, key: str) -> str:
-    """Получить перевод по ключу"""
     return TRANSLATIONS.get(lang, TRANSLATIONS["ru"]).get(key, key)
 
 # ===========================
@@ -334,7 +395,6 @@ def get_current_user(session_token: Optional[str] = Cookie(None), db: Session = 
 
 
 def get_language(language: Optional[str] = Cookie(None)) -> str:
-    """Получить текущий язык из cookie"""
     return language if language in ["ru", "kk"] else "ru"
 
 
@@ -354,7 +414,10 @@ def create_admin():
                 password_hash=hashed_pw,
                 full_name="Administrator",
                 is_admin=True,
-                school="System"
+                school="System",
+                category="Администратор",
+                subject="",
+                experience=0
             )
             db.add(new_admin)
             db.commit()
@@ -373,7 +436,6 @@ def create_admin():
 # ===========================
 @app.get("/set-language/{lang}")
 def set_language(lang: str, request: Request):
-    """Переключить язык"""
     if lang not in ["ru", "kk"]:
         lang = "ru"
     
@@ -446,6 +508,9 @@ def register_post(
     confirm_password: str = Form(...),
     full_name: str = Form(...),
     school: str = Form(""),
+    category: str = Form(""),
+    subject: str = Form(""),
+    experience: int = Form(0),
     db: Session = Depends(get_db),
     lang: str = Depends(get_language)
 ):
@@ -478,6 +543,9 @@ def register_post(
         password_hash=hashed_pw,
         full_name=full_name,
         school=school,
+        category=category,
+        subject=subject,
+        experience=experience,
         is_admin=False
     )
     db.add(new_user)
@@ -529,10 +597,13 @@ def dashboard(
 
 @app.post("/add-achievement")
 async def add_achievement(
+    achievement_type: str = Form(...),
+    student_name: str = Form(""),
     title: str = Form(...),
     description: str = Form(""),
-    category: str = Form("other"),
-    level: str = Form("school"),
+    category: str = Form(...),
+    level: str = Form(...),
+    place: str = Form(...),
     file: Optional[UploadFile] = None,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -541,21 +612,12 @@ async def add_achievement(
     if not user:
         return RedirectResponse(url="/login")
     
-    # АВТОМАТИЧЕСКОЕ НАЧИСЛЕНИЕ БАЛЛОВ ПО УРОВНЮ
-    LEVEL_POINTS = {
-        "school": 2,
-        "city": 3,
-        "regional": 4,
-        "national": 5,
-        "international": 6
-    }
-    points = LEVEL_POINTS.get(level, 0)
+    # АВТОМАТИЧЕСКИЙ РАСЧЕТ БАЛЛОВ
+    points = calculate_points(level, place)
     
     file_path = None
     
-    # Обработка загрузки файла
     if file and file.filename:
-        # Проверка размера файла (5 МБ = 5 * 1024 * 1024 байт)
         content = await file.read()
         if len(content) > 5 * 1024 * 1024:
             t = lambda key: get_translation(lang, key)
@@ -568,7 +630,6 @@ async def add_achievement(
                 "t": t
             })
         
-        # Сохранение файла
         import uuid
         file_ext = file.filename.split(".")[-1]
         unique_filename = f"{uuid.uuid4()}.{file_ext}"
@@ -579,12 +640,15 @@ async def add_achievement(
     
     new_achievement = Achievement(
         user_id=user.id,
+        achievement_type=achievement_type,
+        student_name=student_name if achievement_type == "student" else None,
         title=title,
         description=description,
         category=category,
         level=level,
+        place=place,
         file_path=file_path,
-        points=points,  # АВТОМАТИЧЕСКИ НАЗНАЧЕННЫЕ БАЛЛЫ
+        points=points,
         status="pending"
     )
     db.add(new_achievement)
@@ -634,6 +698,9 @@ def create_user(
     password: str = Form(...),
     full_name: str = Form(...),
     school: str = Form(""),
+    category: str = Form(""),
+    subject: str = Form(""),
+    experience: int = Form(0),
     is_admin: bool = Form(False),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -650,6 +717,9 @@ def create_user(
         password_hash=hashed_pw,
         full_name=full_name,
         school=school,
+        category=category,
+        subject=subject,
+        experience=experience,
         is_admin=is_admin
     )
     db.add(new_user)
