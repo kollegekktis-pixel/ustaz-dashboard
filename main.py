@@ -171,6 +171,18 @@ TRANSLATIONS = {
         "category_courses": "Курсы",
         "category_other": "Другое",
         
+        # Категории для ученика
+        "category_competitions": "Конкурсы",
+        "category_olympiad": "Олимпиада",
+        "category_project": "Проект",
+        
+        # Категории для учителя
+        "category_teacher_competitions": "Конкурсы",
+        "category_teacher_olympiad": "Олимпиада",
+        "category_teacher_projects": "Проекты",
+        "category_experience_exchange": "Обмен опыта",
+        "category_methodical": "Методические пособия",
+        
         # Уровни
         "level_school": "Школьный",
         "level_city": "Городской",
@@ -284,6 +296,18 @@ TRANSLATIONS = {
         "category_projects": "Жобалар",
         "category_courses": "Курстар",
         "category_other": "Басқа",
+        
+        # Оқушы үшін санаттар
+        "category_competitions": "Конкурстар",
+        "category_olympiad": "Олимпиада",
+        "category_project": "Жоба",
+        
+        # Мұғалім үшін санаттар
+        "category_teacher_competitions": "Конкурстар",
+        "category_teacher_olympiad": "Олимпиада",
+        "category_teacher_projects": "Жобалар",
+        "category_experience_exchange": "Тәжірибе алмасу",
+        "category_methodical": "Әдістемелік құралдар",
         
         # Деңгейлер
         "level_school": "Мектептік",
