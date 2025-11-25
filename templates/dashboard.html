@@ -5,27 +5,6 @@
 {% block content %}
 
 <style>
-.achievement-file {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
-    padding: 0.5rem 0.75rem;
-    background: #e8f4f8;
-    border-radius: 8px;
-    font-size: 0.9rem;
-}
-
-.achievement-file a {
-    color: #0077b6;
-    text-decoration: none;
-    font-weight: 600;
-}
-
-.achievement-file a:hover {
-    text-decoration: underline;
-}
-
 .sub-tabs {
     display: flex;
     gap: 0.5rem;
@@ -58,6 +37,27 @@
     background: #7030A0;
     color: white;
     border-color: #7030A0;
+}
+
+.points-info {
+    background: #f0f0f0;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.points-table {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.points-row {
+    background: white;
+    padding: 0.5rem;
+    border-radius: 6px;
 }
 </style>
 
@@ -115,9 +115,9 @@
     </div>
 </div>
 
-<!-- TAB: ACHIEVEMENTS -->
+<!-- TAB: ACHIEVEMENTS (с подвкладками) -->
 <div id="achievements" class="tab-content" style="display: none;">
-    <!-- ПОД-ВКЛАДКИ -->
+    <!-- ПОД-ВКЛАДКИ для типов достижений -->
     <div class="sub-tabs">
         <div class="sub-tab active" onclick="switchAchievementType('student')">
             👨‍🎓 {{ t('student_achievements') }}
@@ -133,13 +133,25 @@
         </div>
     </div>
 
-    <!-- ФОРМА УЧЕНИКА -->
+    <!-- ТАБЛИЦА БАЛЛОВ -->
+    <div class="points-info">
+        <strong>💡 Система начисления баллов:</strong>
+        <div class="points-table">
+            <div class="points-row"><strong>1 место:</strong> Город-35, Область-40, Республика-45, Международный-50</div>
+            <div class="points-row"><strong>2 место:</strong> Город-30, Область-35, Республика-40, Международный-45</div>
+            <div class="points-row"><strong>3 место:</strong> Город-25, Область-30, Республика-35, Международный-40</div>
+            <div class="points-row"><strong>Сертификат:</strong> Город-10, Область-15, Республика-20, Международный-25</div>
+        </div>
+    </div>
+
+    <!-- ФОРМА ДОБАВЛЕНИЯ (Достижения ученика) -->
     <div id="form-student" class="card achievement-form">
         <h2>➕ {{ t('student_achievements') }}</h2>
         <form method="post" action="/add-achievement" enctype="multipart/form-data">
             <input type="hidden" name="achievement_type" value="student">
             
             <div style="display: grid; gap: 1rem;">
+                <!-- ФИО УЧЕНИКА -->
                 <div>
                     <label>{{ t('student_name') }} *</label>
                     <input name="student_name" type="text" required placeholder="Иванов Иван Иванович">
@@ -189,7 +201,7 @@
 
                     <div>
                         <label>{{ t('file') }}</label>
-                        <input name="file" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xlsx">
+                        <input name="file" type="file" accept=".pdf,.jpg,.jpeg,.png" style="padding: 0.5rem;">
                     </div>
                 </div>
 
@@ -198,7 +210,7 @@
         </form>
     </div>
 
-    <!-- ФОРМА УЧИТЕЛЯ -->
+    <!-- ФОРМА ДОБАВЛЕНИЯ (Достижения педагога) -->
     <div id="form-teacher" class="card achievement-form" style="display: none;">
         <h2>➕ {{ t('teacher_achievements') }}</h2>
         <form method="post" action="/add-achievement" enctype="multipart/form-data">
@@ -251,7 +263,7 @@
 
                     <div>
                         <label>{{ t('file') }}</label>
-                        <input name="file" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xlsx">
+                        <input name="file" type="file" accept=".pdf,.jpg,.jpeg,.png" style="padding: 0.5rem;">
                     </div>
                 </div>
 
@@ -260,14 +272,114 @@
         </form>
     </div>
 
-    <!-- СПИСОК ДОСТИЖЕНИЙ ✅ ИСПРАВЛЕНО -->
+    <!-- ФОРМА ДОБАВЛЕНИЯ (Общественно-социальная активность) -->
+    <div id="form-social" class="card achievement-form" style="display: none;">
+        <h2>➕ {{ t('social_activity') }}</h2>
+        <form method="post" action="/add-achievement" enctype="multipart/form-data">
+            <input type="hidden" name="achievement_type" value="social">
+            <input type="hidden" name="category" value="social">
+            
+            <div style="display: grid; gap: 1rem;">
+                <div>
+                    <label>{{ t('title') }} *</label>
+                    <input name="title" type="text" required placeholder="Название мероприятия">
+                </div>
+
+                <div>
+                    <label>{{ t('description') }}</label>
+                    <textarea name="description" rows="3" placeholder="Описание"></textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>Уровень</label>
+                        <select name="level" required>
+                            <option value="city">{{ t('level_city') }}</option>
+                            <option value="regional">{{ t('level_regional') }}</option>
+                            <option value="national">{{ t('level_national') }}</option>
+                            <option value="international">{{ t('level_international') }}</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Место</label>
+                        <select name="place" required>
+                            <option value="1">{{ t('place_1') }}</option>
+                            <option value="2">{{ t('place_2') }}</option>
+                            <option value="3">{{ t('place_3') }}</option>
+                            <option value="certificate">{{ t('place_certificate') }}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label>{{ t('file') }}</label>
+                    <input name="file" type="file" accept=".pdf,.jpg,.jpeg,.png" style="padding: 0.5rem;">
+                </div>
+
+                <button type="submit">💾 {{ t('save') }}</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- ФОРМА ДОБАВЛЕНИЯ (Воспитательная активность) -->
+    <div id="form-educational" class="card achievement-form" style="display: none;">
+        <h2>➕ {{ t('educational_activity') }}</h2>
+        <form method="post" action="/add-achievement" enctype="multipart/form-data">
+            <input type="hidden" name="achievement_type" value="educational">
+            <input type="hidden" name="category" value="educational">
+            
+            <div style="display: grid; gap: 1rem;">
+                <div>
+                    <label>{{ t('title') }} *</label>
+                    <input name="title" type="text" required placeholder="Название мероприятия">
+                </div>
+
+                <div>
+                    <label>{{ t('description') }}</label>
+                    <textarea name="description" rows="3" placeholder="Описание"></textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>Уровень</label>
+                        <select name="level" required>
+                            <option value="city">{{ t('level_city') }}</option>
+                            <option value="regional">{{ t('level_regional') }}</option>
+                            <option value="national">{{ t('level_national') }}</option>
+                            <option value="international">{{ t('level_international') }}</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Место</label>
+                        <select name="place" required>
+                            <option value="1">{{ t('place_1') }}</option>
+                            <option value="2">{{ t('place_2') }}</option>
+                            <option value="3">{{ t('place_3') }}</option>
+                            <option value="certificate">{{ t('place_certificate') }}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label>{{ t('file') }}</label>
+                    <input name="file" type="file" accept=".pdf,.jpg,.jpeg,.png" style="padding: 0.5rem;">
+                </div>
+
+                <button type="submit">💾 {{ t('save') }}</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- СПИСОК ДОСТИЖЕНИЙ -->
     <div class="card" style="margin-top: 1.5rem;">
         <h2>📋 Список достижений</h2>
         
         {% if achievements %}
         <div style="display: grid; gap: 1rem; margin-top: 1.5rem;">
             {% for ach in achievements %}
-            <div class="achievement-item" data-type="{{ ach.achievement_type }}" style="border: 1px solid #ddd; padding: 1rem; border-radius: 8px;">
+            <div class="achievement-item" data-type="{{ ach.achievement_type }}">
                 <div style="display: flex; justify-content: space-between; align-items: start;">
                     <div style="flex: 1;">
                         <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
@@ -307,28 +419,20 @@
                             </span>
                             
                             {% if ach.status == 'pending' %}
-                            <span style="background: #fff3cd; color: #856404; padding: 0.3rem 0.75rem; border-radius: 12px; font-size: 0.85rem;">⏳ {{ t('status_pending') }}</span>
+                            <span class="badge pending">⏳ {{ t('status_pending') }}</span>
                             {% elif ach.status == 'approved' %}
-                            <span style="background: #d4edda; color: #155724; padding: 0.3rem 0.75rem; border-radius: 12px; font-size: 0.85rem;">✅ {{ t('status_approved') }}</span>
+                            <span class="badge approved">✅ {{ t('status_approved') }}</span>
                             {% else %}
-                            <span style="background: #f8d7da; color: #721c24; padding: 0.3rem 0.75rem; border-radius: 12px; font-size: 0.85rem;">❌ {{ t('status_rejected') }}</span>
+                            <span class="badge rejected">❌ {{ t('status_rejected') }}</span>
                             {% endif %}
                             
                             <span style="color: #999; font-size: 0.85rem;">📅 {{ ach.created_at.strftime('%Y-%m-%d') }}</span>
                         </div>
-
-                        <!-- ✅ ФАЙЛ СКАЧИВАНИЯ -->
-                        {% if ach.file_path %}
-                        <div class="achievement-file">
-                            <span>📄</span>
-                            <a href="/download/{{ ach.id }}" target="_blank">{{ ach.file_name or 'Скачать файл' }}</a>
-                        </div>
-                        {% endif %}
                     </div>
                     
                     <form method="post" action="/achievement/{{ ach.id }}/delete" style="margin-left: 1rem;">
                         <button type="submit" onclick="return confirm('Удалить?')" 
-                                style="background: #dc3545; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer;">
+                                style="background: #dc3545; padding: 0.5rem 1rem; font-size: 0.9rem;">
                             🗑️
                         </button>
                     </form>
@@ -342,42 +446,73 @@
     </div>
 </div>
 
-<!-- TAB: ADMIN PANEL (сокращено) -->
+<!-- TAB: ADMIN PANEL -->
 {% if user.is_admin %}
 <div id="admin" class="tab-content" style="display: none;">
+    <!-- CREATE USER -->
     <div class="card">
-        <h2>Достижения на проверке</h2>
+        <h2>{{ t('create_user') }}</h2>
+        <form method="post" action="/create-user">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <input name="username" placeholder="{{ t('username') }}" required>
+                <input name="password" type="password" placeholder="{{ t('password') }}" required>
+                <input name="full_name" placeholder="{{ t('full_name') }}" required>
+                <input name="school" placeholder="{{ t('school') }}">
+                <input name="category" placeholder="{{ t('category') }}">
+                <input name="subject" placeholder="{{ t('subject') }}">
+                <input name="experience" type="number" placeholder="{{ t('experience') }}" value="0">
+                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" name="is_admin">
+                    {{ t('admin_role') }}
+                </label>
+                <button type="submit">➕ {{ t('create_user') }}</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- PENDING ACHIEVEMENTS -->
+    <div class="card">
+        <h2>{{ t('pending_review') }}</h2>
         {% if pending_achievements %}
-        <table style="width: 100%; border-collapse: collapse;">
+        <table>
             <thead>
-                <tr style="border-bottom: 2px solid #ddd;">
-                    <th style="padding: 0.75rem; text-align: left;">Ученик</th>
-                    <th style="padding: 0.75rem; text-align: left;">Название</th>
-                    <th style="padding: 0.75rem; text-align: left;">Файл</th>
-                    <th style="padding: 0.75rem; text-align: left;">Баллы</th>
-                    <th style="padding: 0.75rem; text-align: left;">Действие</th>
+                <tr>
+                    <th>Тип</th>
+                    <th>{{ t('teacher') }}</th>
+                    <th>Ученик</th>
+                    <th>{{ t('title') }}</th>
+                    <th>Категория</th>
+                    <th>Уровень</th>
+                    <th>Место</th>
+                    <th>Баллы</th>
+                    <th>{{ t('actions') }}</th>
                 </tr>
             </thead>
             <tbody>
                 {% for ach in pending_achievements %}
-                <tr style="border-bottom: 1px solid #eee;">
-                    <td style="padding: 0.75rem;">{{ ach.student_name or ach.user.full_name }}</td>
-                    <td style="padding: 0.75rem;">{{ ach.title }}</td>
-                    <td style="padding: 0.75rem;">
-                        {% if ach.file_path %}
-                        <a href="/download/{{ ach.id }}" target="_blank" style="color: #0077b6;">📥 {{ ach.file_name or 'Файл' }}</a>
-                        {% else %}
-                        —
-                        {% endif %}
+                <tr>
+                    <td>
+                        {% if ach.achievement_type == 'student' %}👨‍🎓
+                        {% elif ach.achievement_type == 'teacher' %}👨‍🏫
+                        {% elif ach.achievement_type == 'social' %}🤝
+                        {% else %}📖{% endif %}
                     </td>
-                    <td style="padding: 0.75rem; font-weight: 700; color: #7030A0;">{{ ach.points }}</td>
-                    <td style="padding: 0.75rem;">
-                        <form method="post" action="/achievement/{{ ach.id }}/approve" style="display: inline;">
-                            <button type="submit" style="background: #27ae60; color: white; padding: 0.4rem 0.8rem; border: none; border-radius: 4px; cursor: pointer;">✅</button>
-                        </form>
-                        <form method="post" action="/achievement/{{ ach.id }}/reject" style="display: inline; margin-left: 0.25rem;">
-                            <button type="submit" style="background: #e74c3c; color: white; padding: 0.4rem 0.8rem; border: none; border-radius: 4px; cursor: pointer;">❌</button>
-                        </form>
+                    <td>{{ ach.user.full_name or ach.user.username }}</td>
+                    <td>{{ ach.student_name or '—' }}</td>
+                    <td>{{ ach.title }}</td>
+                    {{ t('category_' + (ach.category or 'other')) }}
+                    {{ t('level_' + (ach.level or 'school')) }}
+                    {{ t('place_' + (ach.place or 'certificate')) }}
+                    <td><strong style="color: #7030A0;">{{ ach.points }}</strong></td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <form method="post" action="/achievement/{{ ach.id }}/approve" style="display: inline;">
+                                <button type="submit" style="background: #27ae60; padding: 0.4rem 0.8rem; font-size: 0.85rem;">✅</button>
+                            </form>
+                            <form method="post" action="/achievement/{{ ach.id }}/reject" style="display: inline;">
+                                <button type="submit" style="background: #e74c3c; padding: 0.4rem 0.8rem; font-size: 0.85rem;">❌</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
@@ -390,15 +525,56 @@
 </div>
 {% endif %}
 
-<!-- TAB: REPORTS (сокращено) -->
+<!-- TAB: REPORTS -->
 <div id="reports" class="tab-content" style="display: none;">
     <div class="card">
-        <h2>🏆 Топ-10 учителей</h2>
-        <!-- Вставьте список учителей здесь -->
+        <h2>{{ t('top_teachers') }}</h2>
+        {% set teacher_points = {} %}
+        {% for u in all_users if not u.is_admin %}
+            {% set points = u.achievements|selectattr('status', 'equalto', 'approved')|map(attribute='points')|sum %}
+            {% if points > 0 %}
+                {% set _ = teacher_points.update({u.id: {'user': u, 'points': points}}) %}
+            {% endif %}
+        {% endfor %}
+        {% set sorted_teachers = teacher_points.values()|sort(attribute='points', reverse=True) %}
+        
+        {% if sorted_teachers %}
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ t('rank') }}</th>
+                    <th>{{ t('teacher') }}</th>
+                    <th>{{ t('school') }}</th>
+                    <th>{{ t('subject') }}</th>
+                    <th>{{ t('points') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in sorted_teachers[:10] %}
+                <tr>
+                    <td>
+                        {% if loop.index == 1 %}🥇
+                        {% elif loop.index == 2 %}🥈
+                        {% elif loop.index == 3 %}🥉
+                        {% else %}{{ loop.index }}
+                        {% endif %}
+                    </td>
+                    <td>{{ item.user.full_name or item.user.username }}</td>
+                    <td>{{ item.user.school or '—' }}</td>
+                    <td>{{ item.user.subject or '—' }}</td>
+                    <td style="font-weight: 700; color: #7030A0;">{{ item.points }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="text-align: center; color: #999; padding: 2rem;">Нет данных 📊</p>
+        {% endif %}
     </div>
 </div>
 
 <script>
+// Переключение главных вкладок
 function switchMainTab(tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
@@ -407,6 +583,7 @@ function switchMainTab(tab) {
     document.getElementById(tab).style.display = 'block';
 }
 
+// Переключение типов достижений
 function switchAchievementType(type) {
     document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.achievement-form').forEach(f => f.style.display = 'none');
