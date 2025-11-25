@@ -550,21 +550,31 @@ def logout():
 # ROUTES - DASHBOARD
 # ===========================
 @app.get("/dashboard", response_class=HTMLResponse)
-def dashboard(
-    request: Request,
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-    lang: str = Depends(get_language)
-):
+def dashboard(request: Request,
+              user: User = Depends(get_current_user),
+              db: Session = Depends(get_db),
+              lang: str = Depends(get_language)):
+
     if not user:
         return RedirectResponse(url="/login")
-    
+
     t = lambda key: get_translation(lang, key)
-    
+
     achievements = db.query(Achievement).filter(Achievement.user_id == user.id).all()
     all_users = db.query(User).all() if user.is_admin else []
     pending = db.query(Achievement).filter(Achievement.status == "pending").all() if user.is_admin else []
-    
+
+    # ✅ СТАТИСТИКА ВСТАВЛЯЕТСЯ ЗДЕСЬ
+    if user.is_admin:
+        total = db.query(Achievement).count()
+        confirmed = db.query(Achievement).filter(Achievement.status == "approved").count()
+        pending_count = db.query(Achievement).filter(Achievement.status == "pending").count()
+    else:
+        total = len(achievements)
+        confirmed = len([a for a in achievements if a.status == "approved"])
+        pending_count = len([a for a in achievements if a.status == "pending"])
+
+    # ⬇️ НЕПОСРЕДСТВЕННО ПЕРЕД ЭТИМ RETURN
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
         "user": user,
@@ -573,7 +583,10 @@ def dashboard(
         "pending_achievements": pending,
         "allow_registration": ALLOW_REGISTRATION,
         "lang": lang,
-        "t": t
+        "t": t,
+        "total": total,
+        "confirmed": confirmed,
+        "pending_count": pending_count
     })
 
 
@@ -709,5 +722,6 @@ def create_user(
     db.add(new_user)
     db.commit()
     return RedirectResponse(url="/dashboard?success=user_created", status_code=303)
+
 
 
