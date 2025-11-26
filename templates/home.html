@@ -1,0 +1,163 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ t('main_page') }} - {{ t('app_title') }}{% endblock %}
+
+{% block content %}
+<style>
+    .home-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .home-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        animation: fadeInDown 0.6s ease;
+    }
+
+    .home-header img {
+        width: 120px;
+        height: 120px;
+        margin-bottom: 1.5rem;
+        border-radius: 50%;
+        box-shadow: 0 4px 20px rgba(112, 48, 160, 0.3);
+    }
+
+    .home-header h1 {
+        color: white;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+    }
+
+    .home-header p {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.1rem;
+    }
+
+    .main-sections {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2.5rem;
+        text-align: center;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        border: 3px solid #FFFFFF;
+        transition: all 0.4s ease;
+        cursor: pointer;
+        animation: fadeInUp 0.6s ease;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .section-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 12px 40px rgba(112, 48, 160, 0.3);
+        border-color: #7030A0;
+    }
+
+    .section-icon {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+        filter: drop-shadow(0 4px 10px rgba(112, 48, 160, 0.2));
+    }
+
+    .section-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #7030A0;
+        margin-bottom: 0.5rem;
+    }
+
+    .section-desc {
+        color: #666;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .section-card:nth-child(1) { animation-delay: 0.1s; }
+    .section-card:nth-child(2) { animation-delay: 0.2s; }
+    .section-card:nth-child(3) { animation-delay: 0.3s; }
+    .section-card:nth-child(4) { animation-delay: 0.4s; }
+
+    @media (max-width: 768px) {
+        .home-header h1 {
+            font-size: 2rem;
+        }
+        
+        .main-sections {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .section-card {
+            padding: 2rem;
+        }
+    }
+</style>
+
+<div class="home-container">
+    <div class="home-header">
+        <img src="/static/logo.png" alt="Jetistik Hub" onerror="this.style.display='none'">
+        <h1>Jetistik Hub</h1>
+        <p>{{ t('app_subtitle') }}</p>
+    </div>
+
+    <div class="main-sections">
+        <a href="/jeke-cabinet" class="section-card">
+            <div class="section-icon">👤</div>
+            <div class="section-title">Jeke Cabinet</div>
+            <div class="section-desc">{{ t('profile') }}</div>
+        </a>
+
+        <a href="/jetistik-alany" class="section-card">
+            <div class="section-icon">🏆</div>
+            <div class="section-title">Jetistik Alany</div>
+            <div class="section-desc">Жетістіктер аймағы</div>
+        </a>
+
+        <a href="/rulebox" class="section-card">
+            <div class="section-icon">📚</div>
+            <div class="section-title">RuleBox</div>
+            <div class="section-desc">Заңдар мен ережелер</div>
+        </a>
+
+        <a href="/ai-tools" class="section-card">
+            <div class="section-icon">🤖</div>
+            <div class="section-title">AI Tools</div>
+            <div class="section-desc">ИИ құралдары</div>
+        </a>
+    </div>
+</div>
+
+{% endblock %}

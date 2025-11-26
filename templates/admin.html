@@ -1,0 +1,159 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ t('admin_panel') }} - {{ t('app_title') }}{% endblock %}
+
+{% block content %}
+<style>
+    .back-btn {
+        display: inline-block;
+        background: white;
+        color: #7030A0;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+    }
+
+    .back-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
+    }
+</style>
+
+<a href="/home" class="back-btn">← {{ t('main_page') }}</a>
+
+<div class="card">
+    <h2>⚙️ {{ t('admin_panel') }}</h2>
+    
+    <h3 style="margin-top: 2rem; color: #7030A0;">{{ t('create_user') }}</h3>
+    <form method="post" action="/create-user" style="max-width: 600px;">
+        <div style="display: grid; gap: 1rem;">
+            <div>
+                <label>{{ t('username') }}</label>
+                <input name="username" type="text" required>
+            </div>
+            
+            <div>
+                <label>{{ t('password') }}</label>
+                <input name="password" type="password" required>
+            </div>
+            
+            <div>
+                <label>{{ t('full_name') }}</label>
+                <input name="full_name" type="text" required>
+            </div>
+            
+            <div>
+                <label>{{ t('school') }}</label>
+                <input name="school" type="text">
+            </div>
+            
+            <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" name="is_admin" value="true">
+                    {{ t('admin_role') }}
+                </label>
+            </div>
+            
+            <button type="submit">{{ t('create_user') }}</button>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h2>👥 {{ t('all_users') }}</h2>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>{{ t('username') }}</th>
+                <th>{{ t('full_name') }}</th>
+                <th>{{ t('school') }}</th>
+                <th>{{ t('subject') }}</th>
+                <th>{{ t('admin_role') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in all_users %}
+            <tr>
+                <td>{{ u.id }}</td>
+                <td>{{ u.username }}</td>
+                <td>{{ u.full_name or '-' }}</td>
+                <td>{{ u.school or '-' }}</td>
+                <td>{{ u.subject or '-' }}</td>
+                <td>{% if u.is_admin %}✅{% else %}❌{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h2>{{ t('pending_review') }}</h2>
+    
+    {% if pending_achievements %}
+    <table>
+        <thead>
+            <tr>
+                <th>{{ t('teacher') }}</th>
+                <th>Тип</th>
+                <th>{{ t('title') }}</th>
+                <th>{{ t('category') }}</th>
+                <th>{{ t('level') }}</th>
+                <th>{{ t('place') }}</th>
+                <th>{{ t('points') }}</th>
+                <th>{{ t('file') }}</th>
+                <th>{{ t('date') }}</th>
+                <th>{{ t('actions') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ach in pending_achievements %}
+            <tr>
+                <td>{{ ach.user.full_name or ach.user.username }}</td>
+                <td>
+                    {% if ach.achievement_type == 'oqushy_status' %}{{ t('oqushy_status') }}
+                    {% elif ach.achievement_type == 'sapa_qorzhyn' %}{{ t('sapa_qorzhyn') }}
+                    {% elif ach.achievement_type == 'qogam_serpin' %}{{ t('qogam_serpin') }}
+                    {% elif ach.achievement_type == 'tarbie_arnasy' %}{{ t('tarbie_arnasy') }}
+                    {% endif %}
+                </td>
+                <td>{{ ach.title }}</td>
+                <td>{{ t('category_' + ach.category) if ach.category else '-' }}</td>
+                <td>{{ t('level_' + ach.level) if ach.level else '-' }}</td>
+                <td>{{ t('place_' + ach.place) if ach.place else '-' }}</td>
+                <td><strong>{{ ach.points }}</strong></td>
+                <td>
+                    {% if ach.file_path %}
+                    <a href="/{{ ach.file_path }}" target="_blank" style="color: #4caf50;">📎</a>
+                    {% else %}-{% endif %}
+                </td>
+                <td>{{ ach.created_at.strftime('%Y-%m-%d') }}</td>
+                <td>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <form method="post" action="/achievement/{{ ach.id }}/approve" style="display: inline;">
+                            <button type="submit" style="background: #27ae60; padding: 0.5rem 1rem; font-size: 0.85rem;">
+                                ✅
+                            </button>
+                        </form>
+                        <form method="post" action="/achievement/{{ ach.id }}/reject" style="display: inline;">
+                            <button type="submit" style="background: #e74c3c; padding: 0.5rem 1rem; font-size: 0.85rem;">
+                                ❌
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="text-align: center; color: #999; padding: 2rem;">{{ t('pending_review') }} ✅</p>
+    {% endif %}
+</div>
+
+{% endblock %}

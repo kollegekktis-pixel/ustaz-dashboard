@@ -1,0 +1,129 @@
+{% extends "layout.html" %}
+
+{% block title %}Jeke Cabinet - {{ t('app_title') }}{% endblock %}
+
+{% block content %}
+<style>
+    .back-btn {
+        display: inline-block;
+        background: white;
+        color: #7030A0;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+    }
+
+    .back-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
+    }
+</style>
+
+<a href="/home" class="back-btn">← {{ t('main_page') }}</a>
+
+<div class="card">
+    <h2>👤 Jeke Cabinet</h2>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+        <div style="background: linear-gradient(135deg, #7030A0, #9b59d0); color: white; padding: 1.5rem; border-radius: 12px;">
+            <div style="font-size: 2rem; font-weight: 700;">{{ t('welcome_user') }}</div>
+            <div style="font-size: 1.2rem; margin-top: 0.5rem;">{{ user.full_name or user.username }}</div>
+            {% if user.school %}
+            <div style="margin-top: 0.5rem; opacity: 0.9;">🏫 {{ user.school }}</div>
+            {% endif %}
+            {% if user.subject %}
+            <div style="margin-top: 0.5rem; opacity: 0.9;">📚 {{ user.subject }}</div>
+            {% endif %}
+            {% if user.category %}
+            <div style="margin-top: 0.5rem; opacity: 0.9;">🎓 {{ user.category }}</div>
+            {% endif %}
+            {% if user.experience %}
+            <div style="margin-top: 0.5rem; opacity: 0.9;">⏱️ {{ t('experience') }}: {{ user.experience }} лет</div>
+            {% endif %}
+        </div>
+
+        <div style="background: white; border: 2px solid #FFFFFF; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+            <div style="color: #666; margin-bottom: 0.5rem;">{{ t('total_points') }}</div>
+            <div style="font-size: 2.5rem; font-weight: 700; color: #7030A0;">{{ total_points }}</div>
+        </div>
+
+        <div style="background: white; border: 2px solid #FFFFFF; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+            <div style="color: #666; margin-bottom: 0.5rem;">{{ t('pending_achievements') }}</div>
+            <div style="font-size: 2.5rem; font-weight: 700; color: #f39c12;">{{ pending_count }}</div>
+        </div>
+
+        <div style="background: white; border: 2px solid #FFFFFF; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+            <div style="color: #666; margin-bottom: 0.5rem;">{{ t('approved_achievements') }}</div>
+            <div style="font-size: 2.5rem; font-weight: 700; color: #27ae60;">{{ approved_count }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>🏆 {{ t('my_achievements') }}</h2>
+    
+    {% if achievements %}
+    <table>
+        <thead>
+            <tr>
+                <th>{{ t('date') }}</th>
+                <th>Тип</th>
+                <th>{{ t('title') }}</th>
+                <th>{{ t('category') }}</th>
+                <th>{{ t('level') }}</th>
+                <th>{{ t('points') }}</th>
+                <th>{{ t('status') }}</th>
+                <th>{{ t('file') }}</th>
+                <th>{{ t('actions') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ach in achievements %}
+            <tr>
+                <td>{{ ach.created_at.strftime('%Y-%m-%d') }}</td>
+                <td>
+                    {% if ach.achievement_type == 'oqushy_status' %}{{ t('oqushy_status') }}
+                    {% elif ach.achievement_type == 'sapa_qorzhyn' %}{{ t('sapa_qorzhyn') }}
+                    {% elif ach.achievement_type == 'qogam_serpin' %}{{ t('qogam_serpin') }}
+                    {% elif ach.achievement_type == 'tarbie_arnasy' %}{{ t('tarbie_arnasy') }}
+                    {% endif %}
+                </td>
+                <td>{{ ach.title }}</td>
+                <td>{{ t('category_' + ach.category) if ach.category else '-' }}</td>
+                <td>{{ t('level_' + ach.level) if ach.level else '-' }}</td>
+                <td><strong>{{ ach.points }}</strong></td>
+                <td>
+                    {% if ach.status == 'pending' %}
+                    <span class="badge pending">{{ t('status_pending') }}</span>
+                    {% elif ach.status == 'approved' %}
+                    <span class="badge approved">{{ t('status_approved') }}</span>
+                    {% else %}
+                    <span class="badge rejected">{{ t('status_rejected') }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if ach.file_path %}
+                    <a href="/{{ ach.file_path }}" target="_blank" style="color: #4caf50;">📎</a>
+                    {% else %}-{% endif %}
+                </td>
+                <td>
+                    <form method="post" action="/achievement/{{ ach.id }}/delete" style="display: inline;">
+                        <button type="submit" style="background: #e74c3c; padding: 0.5rem 1rem; font-size: 0.85rem;">
+                            🗑️
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="text-align: center; color: #999; padding: 2rem;">{{ t('my_achievements') }} 📊</p>
+    {% endif %}
+</div>
+
+{% endblock %}

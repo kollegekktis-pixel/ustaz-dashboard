@@ -1,0 +1,134 @@
+{% extends "layout.html" %}
+
+{% block title %}Qogam Serpin - {{ t('app_title') }}{% endblock %}
+
+{% block content %}
+<style>
+    .back-btn {
+        display: inline-block;
+        background: white;
+        color: #7030A0;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+    }
+
+    .back-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
+    }
+</style>
+
+<a href="/jetistik-alany" class="back-btn">← Jetistik Alany</a>
+
+<div class="card">
+    <h2>🤝 Qogam Serpin</h2>
+    <p style="color: #666; margin-bottom: 1.5rem;">{{ t('qogam_serpin_desc') }}</p>
+    
+    <form method="post" action="/add-achievement" enctype="multipart/form-data">
+        <input type="hidden" name="achievement_type" value="qogam_serpin">
+        
+        <div style="display: grid; gap: 1rem;">
+            <div>
+                <label>{{ t('title') }} *</label>
+                <input name="title" type="text" required placeholder="{{ t('title') }}">
+            </div>
+
+            <div>
+                <label>{{ t('description') }}</label>
+                <textarea name="description" rows="3" placeholder="{{ t('description') }}"></textarea>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div>
+                    <label>{{ t('category') }}</label>
+                    <select name="category" required>
+                        <option value="social_events">{{ t('category_social_events') }}</option>
+                        <option value="volunteering">{{ t('category_volunteering') }}</option>
+                        <option value="community_work">{{ t('category_community_work') }}</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>{{ t('level') }}</label>
+                    <select name="level">
+                        <option value="">-</option>
+                        <option value="school">{{ t('level_school') }}</option>
+                        <option value="city">{{ t('level_city') }}</option>
+                        <option value="regional">{{ t('level_regional') }}</option>
+                        <option value="national">{{ t('level_national') }}</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label>{{ t('file') }}</label>
+                <input name="file" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                <div style="font-size: 0.85rem; color: #666; margin-top: 0.25rem;">
+                    📎 PDF, JPG, PNG, DOC, DOCX (макс. 5 МБ)
+                </div>
+            </div>
+
+            <button type="submit" style="margin-top: 1rem;">💾 {{ t('save') }}</button>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h2>📋 {{ t('my_achievements') }}</h2>
+    
+    {% if achievements %}
+    <table>
+        <thead>
+            <tr>
+                <th>{{ t('date') }}</th>
+                <th>{{ t('title') }}</th>
+                <th>{{ t('category') }}</th>
+                <th>{{ t('level') }}</th>
+                <th>{{ t('status') }}</th>
+                <th>{{ t('file') }}</th>
+                <th>{{ t('actions') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ach in achievements %}
+            <tr>
+                <td>{{ ach.created_at.strftime('%Y-%m-%d') }}</td>
+                <td>{{ ach.title }}</td>
+                <td>{{ t('category_' + ach.category) if ach.category else '-' }}</td>
+                <td>{{ t('level_' + ach.level) if ach.level else '-' }}</td>
+                <td>
+                    {% if ach.status == 'pending' %}
+                    <span class="badge pending">{{ t('status_pending') }}</span>
+                    {% elif ach.status == 'approved' %}
+                    <span class="badge approved">{{ t('status_approved') }}</span>
+                    {% else %}
+                    <span class="badge rejected">{{ t('status_rejected') }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if ach.file_path %}
+                    <a href="/{{ ach.file_path }}" target="_blank" style="color: #4caf50;">📎</a>
+                    {% else %}-{% endif %}
+                </td>
+                <td>
+                    <form method="post" action="/achievement/{{ ach.id }}/delete" style="display: inline;">
+                        <button type="submit" style="background: #e74c3c; padding: 0.5rem 1rem; font-size: 0.85rem;">
+                            🗑️
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="text-align: center; color: #999; padding: 2rem;">Пока нет достижений 📊</p>
+    {% endif %}
+</div>
+
+{% endblock %}

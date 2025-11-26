@@ -1,0 +1,119 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ t('reports') }} - {{ t('app_title') }}{% endblock %}
+
+{% block content %}
+<style>
+    .back-btn {
+        display: inline-block;
+        background: white;
+        color: #7030A0;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+    }
+
+    .back-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
+    }
+</style>
+
+<a href="/home" class="back-btn">← {{ t('main_page') }}</a>
+
+<div class="card">
+    <h2>📊 {{ t('top_teachers') }}</h2>
+    
+    {% set teacher_points = {} %}
+    {% for u in all_users if not u.is_admin %}
+        {% set points = u.achievements|selectattr('status', 'equalto', 'approved')|map(attribute='points')|sum %}
+        {% if points > 0 %}
+            {% set _ = teacher_points.update({u.id: {'user': u, 'points': points}}) %}
+        {% endif %}
+    {% endfor %}
+    {% set sorted_teachers = teacher_points.values()|sort(attribute='points', reverse=True) %}
+    
+    {% if sorted_teachers %}
+    <table>
+        <thead>
+            <tr>
+                <th>{{ t('rank') }}</th>
+                <th>{{ t('teacher') }}</th>
+                <th>{{ t('school') }}</th>
+                <th>{{ t('subject') }}</th>
+                <th>{{ t('points') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in sorted_teachers[:10] %}
+            <tr>
+                <td>
+                    {% if loop.index == 1 %}🥇
+                    {% elif loop.index == 2 %}🥈
+                    {% elif loop.index == 3 %}🥉
+                    {% else %}{{ loop.index }}
+                    {% endif %}
+                </td>
+                <td>{{ item.user.full_name or item.user.username }}</td>
+                <td>{{ item.user.school or '-' }}</td>
+                <td>{{ item.user.subject or '-' }}</td>
+                <td style="font-weight: 700; color: #7030A0;">{{ item.points }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="text-align: center; color: #999; padding: 2rem;">{{ t('top_teachers') }} 📊</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>🏫 {{ t('school_ratings') }}</h2>
+    
+    {% set school_stats = {} %}
+    {% for u in all_users if not u.is_admin and u.school %}
+        {% if u.school not in school_stats %}
+            {% set _ = school_stats.update({u.school: {'points': 0, 'teachers': 0}}) %}
+        {% endif %}
+        {% set points = u.achievements|selectattr('status', 'equalto', 'approved')|map(attribute='points')|sum %}
+        {% set _ = school_stats[u.school].update({'points': school_stats[u.school].points + points, 'teachers': school_stats[u.school].teachers + 1}) %}
+    {% endfor %}
+    {% set sorted_schools = school_stats.items()|sort(attribute='1.points', reverse=True) %}
+    
+    {% if sorted_schools %}
+    <table>
+        <thead>
+            <tr>
+                <th>{{ t('rank') }}</th>
+                <th>{{ t('school') }}</th>
+                <th>{{ t('total_teachers') }}</th>
+                <th>{{ t('total_points') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for school, stats in sorted_schools %}
+            <tr>
+                <td>
+                    {% if loop.index == 1 %}🥇
+                    {% elif loop.index == 2 %}🥈
+                    {% elif loop.index == 3 %}🥉
+                    {% else %}{{ loop.index }}
+                    {% endif %}
+                </td>
+                <td>{{ school }}</td>
+                <td>{{ stats.teachers }}</td>
+                <td style="font-weight: 700; color: #7030A0;">{{ stats.points }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="text-align: center; color: #999; padding: 2rem;">{{ t('school_ratings') }} 🏫</p>
+    {% endif %}
+</div>
+
+{% endblock %}
