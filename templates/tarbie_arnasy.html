@@ -1,0 +1,356 @@
+{% extends "layout.html" %}
+
+{% block title %}Tarbie Arnasy - {{ t('app_title') }}{% endblock %}
+
+{% block content %}
+<style>
+    .achievement-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+        position: relative;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        color: white;
+        position: relative;
+    }
+
+    .page-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .rules-btn {
+        position: absolute;
+        top: 0;
+        right: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: white;
+        color: #7030A0;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+    }
+
+    .rules-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
+        background: #f0f0f0;
+    }
+
+    .back-btn {
+        display: inline-block;
+        background: white;
+        color: #7030A0;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .form-card h2 {
+        color: #7030A0;
+        margin-bottom: 1.5rem;
+        font-size: 1.8rem;
+    }
+
+    form {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    input, select, textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+        outline: none;
+        border-color: #7030A0;
+        box-shadow: 0 0 0 3px rgba(112, 48, 160, 0.1);
+    }
+
+    .required::after {
+        content: " *";
+        color: red;
+    }
+
+    .conditional-field {
+        display: none;
+    }
+
+    button {
+        background: linear-gradient(135deg, #7030A0 0%, #9b59d0 100%);
+        color: white;
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
+    }
+
+    button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(112, 48, 160, 0.4);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    thead {
+        background: #7030A0;
+        color: white;
+    }
+
+    th, td {
+        padding: 1rem;
+        text-align: left;
+        border: 2px solid #FFFFFF;
+    }
+
+    tbody tr {
+        background: white;
+        transition: all 0.3s ease;
+    }
+
+    tbody tr:hover {
+        background: #f5f5f5;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .badge.pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .badge.approved {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .delete-btn {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .delete-btn:hover {
+        background: #c82333;
+    }
+
+    @media (max-width: 768px) {
+        .achievement-container {
+            padding: 1rem;
+        }
+
+        .rules-btn {
+            position: static;
+            display: inline-flex;
+            margin-bottom: 1rem;
+        }
+
+        .page-header {
+            text-align: left;
+        }
+
+        table {
+            font-size: 0.85rem;
+        }
+
+        th, td {
+            padding: 0.5rem;
+        }
+    }
+</style>
+
+<div class="achievement-container">
+    <a href="/jetistik-alany" class="back-btn">← Jetistik Alany</a>
+    
+    <div class="page-header">
+        <a href="https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit" target="_blank" class="rules-btn">
+            <span>📋</span>
+            <span>{{ t('tartip_erejeleri') }}</span>
+        </a>
+        <h1>Tarbie Arnasy</h1>
+        <p>{{ t('tarbie_arnasy_desc') }}</p>
+    </div>
+
+    <div class="form-card">
+        <h2>{{ t('add_achievement') }}</h2>
+        
+        <form action="/add-achievement" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="achievement_type" value="tarbie_arnasy">
+            
+            <div>
+                <label class="required">{{ t('category') }}</label>
+                <select name="category" id="categorySelect" required>
+                    <option value="">{{ t('category') }}</option>
+                    <option value="class_management">{{ t('category_class_management') }}</option>
+                    <option value="parent_voice">{{ t('category_parent_voice') }}</option>
+                    <option value="specialist_cooperation">{{ t('category_specialist_cooperation') }}</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="required">{{ t('title') }}</label>
+                <input type="text" name="title" required>
+            </div>
+
+            <div>
+                <label>{{ t('description') }}</label>
+                <textarea name="description" rows="3"></textarea>
+            </div>
+
+            <!-- Классное руководство - по стажу -->
+            <div id="yearsField" class="conditional-field">
+                <label class="required">{{ t('years_experience') }}</label>
+                <select name="years_experience">
+                    <option value="">{{ t('years_experience') }}</option>
+                    <option value="0_1">{{ t('years_0_1') }}</option>
+                    <option value="1_2">{{ t('years_1_2') }}</option>
+                    <option value="2_3">{{ t('years_2_3') }}</option>
+                    <option value="3_plus">{{ t('years_3_plus') }}</option>
+                </select>
+            </div>
+
+            <!-- Голос родителей - по % участия -->
+            <div id="participationField" class="conditional-field">
+                <label class="required">{{ t('parent_participation') }}</label>
+                <select name="parent_participation">
+                    <option value="">{{ t('parent_participation') }}</option>
+                    <option value="up_to_40">{{ t('participation_up_to_40') }}</option>
+                    <option value="up_to_70">{{ t('participation_up_to_70') }}</option>
+                    <option value="up_to_90">{{ t('participation_up_to_90') }}</option>
+                </select>
+            </div>
+
+            <div>
+                <label>{{ t('file') }}</label>
+                <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+            </div>
+
+            <button type="submit">{{ t('save') }}</button>
+        </form>
+    </div>
+
+    <div class="form-card">
+        <h2>{{ t('my_achievements') }}</h2>
+        
+        {% if achievements %}
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ t('title') }}</th>
+                    <th>{{ t('category') }}</th>
+                    <th>{{ t('points') }}</th>
+                    <th>{{ t('status') }}</th>
+                    <th>{{ t('date') }}</th>
+                    <th>{{ t('actions') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for achievement in achievements %}
+                <tr>
+                    <td>{{ achievement.title }}</td>
+                    <td>
+                        {% if achievement.category == 'class_management' %}{{ t('category_class_management') }}
+                        {% elif achievement.category == 'parent_voice' %}{{ t('category_parent_voice') }}
+                        {% elif achievement.category == 'specialist_cooperation' %}{{ t('category_specialist_cooperation') }}
+                        {% endif %}
+                    </td>
+                    <td>{{ achievement.points }}</td>
+                    <td>
+                        <span class="badge {{ achievement.status }}">
+                            {% if achievement.status == 'pending' %}{{ t('status_pending') }}
+                            {% elif achievement.status == 'approved' %}{{ t('status_approved') }}
+                            {% elif achievement.status == 'rejected' %}{{ t('status_rejected') }}
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td>{{ achievement.created_at.strftime('%d.%m.%Y') }}</td>
+                    <td>
+                        <form action="/delete-achievement/{{ achievement.id }}" method="post" style="display: inline;">
+                            <button type="submit" class="delete-btn" onclick="return confirm('{{ t('delete') }}?')">{{ t('delete') }}</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>{{ t('my_achievements') }}: 0</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.getElementById('categorySelect').addEventListener('change', function() {
+    const category = this.value;
+    const yearsField = document.getElementById('yearsField');
+    const participationField = document.getElementById('participationField');
+    
+    // Скрыть все условные поля
+    yearsField.style.display = 'none';
+    participationField.style.display = 'none';
+    
+    // Показать нужное поле в зависимости от категории
+    if (category === 'class_management') {
+        yearsField.style.display = 'block';
+    } else if (category === 'parent_voice') {
+        participationField.style.display = 'block';
+    }
+    // Для specialist_cooperation не нужны дополнительные поля (фиксированные 10 баллов)
+});
+</script>
+
+{% endblock %}
