@@ -1,0 +1,383 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ t('main_page') }} - {{ t('app_title') }}{% endblock %}
+
+{% block content %}
+<style>
+    .home-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .home-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .home-header img {
+        width: 120px;
+        height: 120px;
+        margin-bottom: 1.5rem;
+        border-radius: 50%;
+        box-shadow: 0 4px 20px rgba(112, 48, 160, 0.3);
+    }
+
+    .home-header h1 {
+        color: white;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+    }
+
+    .home-header p {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.1rem;
+    }
+
+    .main-sections {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+        margin-top: 2rem;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2.5rem;
+        text-align: center;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        border: 3px solid #FFFFFF;
+        transition: all 0.4s ease;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        min-height: 200px;
+    }
+
+    .section-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 12px 40px rgba(112, 48, 160, 0.3);
+        border-color: #7030A0;
+    }
+
+    .section-icon {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+        filter: drop-shadow(0 4px 10px rgba(112, 48, 160, 0.2));
+    }
+
+    .section-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #7030A0;
+    }
+
+    /* MODAL STYLES */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        animation: fadeIn 0.3s ease;
+        overflow-y: auto;
+    }
+
+    .modal-content {
+        position: relative;
+        background: linear-gradient(135deg, #7030A0 0%, #5a2480 100%);
+        margin: 3% auto;
+        padding: 2.5rem;
+        border-radius: 20px;
+        max-width: 1000px;
+        box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+        animation: slideDown 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideDown {
+        from { 
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .modal-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        color: white;
+    }
+
+    .modal-header h2 {
+        font-size: 2.2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .modal-header p {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1.1rem;
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 1rem;
+        right: 1.5rem;
+        color: white;
+        font-size: 2rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+
+    .close-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: rotate(90deg);
+    }
+
+    .ai-tools-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+    }
+
+    .ai-tool-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem 1rem;
+        text-align: center;
+        text-decoration: none;
+        color: #333;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .ai-tool-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(112, 48, 160, 0.4);
+    }
+
+    .ai-tool-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .ai-tool-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #7030A0;
+        margin-bottom: 0.25rem;
+    }
+
+    .ai-tool-desc {
+        font-size: 0.75rem;
+        color: #666;
+    }
+
+    @media (max-width: 1024px) {
+        .ai-tools-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .home-header h1 {
+            font-size: 2rem;
+        }
+        
+        .main-sections {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .section-card {
+            padding: 2rem;
+        }
+
+        .modal-content {
+            margin: 5% auto;
+            padding: 1.5rem;
+            max-width: 95%;
+        }
+
+        .ai-tools-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .ai-tools-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="home-container">
+    <div class="home-header">
+        <img src="/static/logo.png" alt="Jetistik Hub" onerror="this.style.display='none'">
+        <h1>Jetistik Hub</h1>
+        <p>{{ t('app_subtitle') }}</p>
+    </div>
+
+    <div class="main-sections">
+        <a href="/jeke-cabinet" class="section-card">
+            <div class="section-icon">👤</div>
+            <div class="section-title">Jeke Cabinet</div>
+        </a>
+
+        <a href="/jetistik-alany" class="section-card">
+            <div class="section-icon">🏆</div>
+            <div class="section-title">Jetistik Alany</div>
+        </a>
+
+        <a href="https://docs.google.com/spreadsheets/d/YOUR_RULEBOX_SHEET_ID/edit" target="_blank" class="section-card">
+            <div class="section-icon">📋</div>
+            <div class="section-title">RuleBox</div>
+        </a>
+
+        <div class="section-card" onclick="openAIModal()">
+            <div class="section-icon">🤖</div>
+            <div class="section-title">AI Tools</div>
+        </div>
+    </div>
+</div>
+
+<!-- AI TOOLS MODAL -->
+<div id="aiModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeAIModal()">&times;</span>
+        
+        <div class="modal-header">
+            <h2>🤖 AI Tools</h2>
+            <p>Выберите AI инструмент для работы</p>
+        </div>
+
+        <div class="ai-tools-grid">
+            <a href="https://chat.openai.com" target="_blank" class="ai-tool-card">
+                <div class="ai-tool-icon">💬</div>
+                <div class="ai-tool-name">ChatGPT</div>
+                <div class="ai-tool-desc">OpenAI</div>
+            </a>
+
+            <a href="https://claude.ai" target="_blank" class="ai-tool-card">
+                <div class="ai-tool-icon">🧠</div>
+                <div class="ai-tool-name">Claude</div>
+                <div class="ai-tool-desc">Anthropic</div>
+            </a>
+
+            <a href="https://gamma.app" target="_blank" class="ai-tool-card">
+                <div class="ai-tool-icon">📊</div>
+                <div class="ai-tool-name">Gamma</div>
+                <div class="ai-tool-desc">Presentations</div>
+            </a>
+
+            <a href="https://www.canva.com" target="_blank" class="ai-tool-card">
+                <div class="ai-tool-icon">🎨</div>
+                <div class="ai-tool-name">Canva</div>
+                <div class="ai-tool-desc">Design</div>
+            </a>
+
+            <a href="https://www.grammarly.com" target="_blank" class="ai-tool-card">
+                <div class="ai-tool-icon">✅</div>
+                <div class="ai-tool-name">Grammarly</div>
+                <div class="ai-tool-desc">Grammar</div>
+            </a>
+
+            <a href="https://www.eduaide.ai" target="_blank" class="ai-tool-card">
+                <div class="ai-tool-icon">🎓</div>
+                <div class="ai-tool-name">Eduaide.ai</div>
+                <div class="ai-tool-desc">For Teachers</div>
+            </a>
+
+            <a href="https://kahoot.com" target="_blank" class="ai-tool-card">
+                <div class="ai-tool-icon">🎮</div>
+                <div class="ai-tool-name">Kahoot!</div>
+                <div class="ai-tool-desc">Quizzes</div>
+            </a>
+
+            <a href="https://quizizz.com" target="_blank" class="ai-tool-card">
+                <div class="ai-tool-icon">📝</div>
+                <div class="ai-tool-name">Quizizz</div>
+                <div class="ai-tool-desc">Tests</div>
+            </a>
+
+            <a href="https://shyraq.ai" target="_blank" class="ai-tool-card">
+                <div class="ai-tool-icon">🇰🇿</div>
+                <div class="ai-tool-name">Shyraq.ai</div>
+                <div class="ai-tool-desc">Қазақстан</div>
+            </a>
+
+            <a href="https://www.midjourney.com" target="_blank" class="ai-tool-card">
+                <div class="ai-tool-icon">🖼️</div>
+                <div class="ai-tool-name">Midjourney</div>
+                <div class="ai-tool-desc">Images</div>
+            </a>
+
+            <a href="https://www.heygen.com" target="_blank" class="ai-tool-card">
+                <div class="ai-tool-icon">👤</div>
+                <div class="ai-tool-name">HeyGen</div>
+                <div class="ai-tool-desc">Avatars</div>
+            </a>
+
+            <a href="https://padlet.com" target="_blank" class="ai-tool-card">
+                <div class="ai-tool-icon">📌</div>
+                <div class="ai-tool-name">Padlet</div>
+                <div class="ai-tool-desc">Collaboration</div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function openAIModal() {
+    document.getElementById('aiModal').style.display = 'block';
+}
+
+function closeAIModal() {
+    document.getElementById('aiModal').style.display = 'none';
+}
+
+// Закрытие при клике вне модала
+window.onclick = function(event) {
+    const modal = document.getElementById('aiModal');
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Закрытие по ESC
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeAIModal();
+    }
+});
+</script>
+
+{% endblock %}
