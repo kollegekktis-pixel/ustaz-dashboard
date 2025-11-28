@@ -221,7 +221,7 @@ TRANSLATIONS = {
         "top_teachers": "Топ-10 учителей",
         "rank": "Место",
         "teacher": "Учитель",
-        "reports": "Отчёты",
+        "reports": "Результат",
         "school_ratings": "Рейтинг школ",
         "total_teachers": "Всего учителей",
         
@@ -380,7 +380,7 @@ TRANSLATIONS = {
         "top_teachers": "Топ-10 мұғалімдер",
         "rank": "Орын",
         "teacher": "Мұғалім",
-        "reports": "Есептер",
+        "reports": "Нәтиже",
         "school_ratings": "Мектептер рейтингі",
         "total_teachers": "Барлық мұғалімдер",
         
