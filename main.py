@@ -123,7 +123,7 @@ TRANSLATIONS = {
         "sapa_qorzhyn": "Sapa Qorzhyn",
         "qogam_serpin": "Qogam Serpin",
         "tarbie_arnasy": "Tarbie Arnasy",
-        "tartip_erejeleri": "Тәртіп ережелері",
+        "oqushy_qadamy": "Оqushy  Qadamy",
         
         # Описания разделов
         "oqushy_status_desc": "Достижения учеников",
@@ -282,7 +282,7 @@ TRANSLATIONS = {
         "sapa_qorzhyn": "Sapa Qorzhyn",
         "qogam_serpin": "Qogam Serpin",
         "tarbie_arnasy": "Tarbie Arnasy",
-        "tartip_erejeleri": "Тәртіп ережелері",
+        "oqushy_qadamy": "Оqushy  Qadamy",
         
         # Бөлімдер сипаттамалары
         "oqushy_status_desc": "Оқушылардың жетістіктері",
