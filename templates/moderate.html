@@ -249,6 +249,37 @@
             min-width: 100%;
         }
     }
+     /* СТИЛИ ДЛЯ ВКЛАДОК */
+    .tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .tab {
+        background: #f0f0f0;        /* Серый фон */
+        color: #333;                 /* Темный текст */
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        border: 2px solid transparent;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+
+    .tab:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        border-color: #7030A0;
+    }
+
+    .tab.active {
+        background: #7030A0;        /* Фиолетовый */
+        color: white;               /* Белый текст */
+    
 </style>
 
 <div class="moderate-container">
