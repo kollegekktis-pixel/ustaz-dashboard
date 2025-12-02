@@ -1,0 +1,466 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ t('moderate') }} - {{ t('app_title') }}{% endblock %}
+
+{% block content %}
+<style>
+    .moderate-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .moderate-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .moderate-header h1 {
+        color: white;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .tab {
+        background: white;
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+
+    .tab:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .tab.active {
+        background: #7030A0;
+        color: white;
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .achievements-grid {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    .achievement-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .achievement-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .teacher-info {
+        flex: 1;
+    }
+
+    .teacher-info strong {
+        color: #7030A0;
+        font-size: 1.2rem;
+    }
+
+    .teacher-info .school {
+        color: #666;
+        font-size: 0.9rem;
+        margin-top: 0.25rem;
+    }
+
+    .achievement-title {
+        color: #333;
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin: 1rem 0;
+    }
+
+    .achievement-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
+        padding: 1rem;
+        background: #f8f5fc;
+        border-radius: 10px;
+    }
+
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .detail-label {
+        font-size: 0.85rem;
+        color: #666;
+        margin-bottom: 0.25rem;
+    }
+
+    .detail-value {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .points-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+        color: #333;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    .file-link {
+        display: inline-block;
+        background: #2196F3;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        margin: 1rem 0;
+        transition: all 0.3s;
+    }
+
+    .file-link:hover {
+        background: #1976D2;
+        transform: translateY(-2px);
+    }
+
+    .actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .action-form {
+        flex: 1;
+        min-width: 150px;
+    }
+
+    .btn-approve {
+        width: 100%;
+        background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        color: white;
+        padding: 1rem;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-approve:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+    }
+
+    .btn-reject {
+        width: 100%;
+        background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        color: white;
+        padding: 1rem;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-reject:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 15px;
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state-text {
+        color: #666;
+        font-size: 1.2rem;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .status-approved {
+        background: #4CAF50;
+        color: white;
+    }
+
+    .status-rejected {
+        background: #f44336;
+        color: white;
+    }
+
+    @media (max-width: 768px) {
+        .moderate-container {
+            padding: 1rem;
+        }
+
+        .actions {
+            flex-direction: column;
+        }
+
+        .action-form {
+            min-width: 100%;
+        }
+    }
+</style>
+
+<div class="moderate-container">
+    <div class="moderate-header">
+        <h1>✅ {{ t('moderate') }}</h1>
+    </div>
+
+    <!-- ВКЛАДКИ -->
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('pending')">
+            {{ t('pending_review') }} ({{ pending_count }})
+        </button>
+        <button class="tab" onclick="showTab('approved')">
+            {{ t('approved') }} ({{ approved_count }})
+        </button>
+        <button class="tab" onclick="showTab('rejected')">
+            {{ t('rejected') }} ({{ rejected_count }})
+        </button>
+    </div>
+
+    <!-- ОЖИДАЮТ ПРОВЕРКИ -->
+    <div id="pending" class="tab-content active">
+        {% if pending_achievements %}
+        <div class="achievements-grid">
+            {% for achievement in pending_achievements %}
+            <div class="achievement-card">
+                <div class="achievement-header">
+                    <div class="teacher-info">
+                        <strong>{{ achievement.user.full_name }}</strong>
+                        <div class="school">{{ achievement.user.school or 'Школа не указана' }}</div>
+                    </div>
+                    <span class="points-badge">{{ achievement.points }} {{ t('points') }}</span>
+                </div>
+
+                <div class="achievement-title">{{ achievement.title }}</div>
+
+                {% if achievement.description %}
+                <p style="color: #666; margin: 1rem 0;">{{ achievement.description }}</p>
+                {% endif %}
+
+                <div class="achievement-details">
+                    <div class="detail-item">
+                        <span class="detail-label">{{ t('category') }}</span>
+                        <span class="detail-value">{{ t(achievement.category) if achievement.category else 'Не указана' }}</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">{{ t('level') }}</span>
+                        <span class="detail-value">{{ t('level_' + achievement.level) if achievement.level else 'Не указан' }}</span>
+                    </div>
+                    
+                    {% if achievement.place %}
+                    <div class="detail-item">
+                        <span class="detail-label">Место</span>
+                        <span class="detail-value">{{ achievement.place }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if achievement.student_name %}
+                    <div class="detail-item">
+                        <span class="detail-label">Ученик</span>
+                        <span class="detail-value">{{ achievement.student_name }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">{{ t('date') }}</span>
+                        <span class="detail-value">{{ achievement.created_at.strftime('%d.%m.%Y') }}</span>
+                    </div>
+                </div>
+
+                {% if achievement.file_path %}
+                <a href="{{ achievement.file_path }}" target="_blank" class="file-link">
+                    📎 Просмотреть файл
+                </a>
+                {% endif %}
+
+                <div class="actions">
+                    <form method="post" action="/achievement/{{ achievement.id }}/approve" class="action-form">
+                        <button type="submit" class="btn-approve">
+                            ✅ {{ t('approve') }}
+                        </button>
+                    </form>
+                    
+                    <form method="post" action="/achievement/{{ achievement.id }}/reject" class="action-form">
+                        <button type="submit" class="btn-reject">
+                            ❌ {{ t('reject') }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">✨</div>
+            <div class="empty-state-text">{{ t('no_pending') }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ОДОБРЕННЫЕ -->
+    <div id="approved" class="tab-content">
+        {% if approved_achievements %}
+        <div class="achievements-grid">
+            {% for achievement in approved_achievements %}
+            <div class="achievement-card">
+                <div class="achievement-header">
+                    <div class="teacher-info">
+                        <strong>{{ achievement.user.full_name }}</strong>
+                        <div class="school">{{ achievement.user.school or 'Школа не указана' }}</div>
+                    </div>
+                    <div>
+                        <span class="points-badge">{{ achievement.points }} {{ t('points') }}</span>
+                        <span class="status-badge status-approved">✅ {{ t('approved') }}</span>
+                    </div>
+                </div>
+
+                <div class="achievement-title">{{ achievement.title }}</div>
+
+                <div class="achievement-details">
+                    <div class="detail-item">
+                        <span class="detail-label">{{ t('category') }}</span>
+                        <span class="detail-value">{{ t(achievement.category) if achievement.category else 'Не указана' }}</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">{{ t('date') }}</span>
+                        <span class="detail-value">{{ achievement.created_at.strftime('%d.%m.%Y') }}</span>
+                    </div>
+                </div>
+
+                {% if achievement.file_path %}
+                <a href="{{ achievement.file_path }}" target="_blank" class="file-link">
+                    📎 Просмотреть файл
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">📭</div>
+            <div class="empty-state-text">Нет одобренных достижений</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ОТКЛОНЁННЫЕ -->
+    <div id="rejected" class="tab-content">
+        {% if rejected_achievements %}
+        <div class="achievements-grid">
+            {% for achievement in rejected_achievements %}
+            <div class="achievement-card">
+                <div class="achievement-header">
+                    <div class="teacher-info">
+                        <strong>{{ achievement.user.full_name }}</strong>
+                        <div class="school">{{ achievement.user.school or 'Школа не указана' }}</div>
+                    </div>
+                    <div>
+                        <span class="points-badge" style="opacity: 0.5;">{{ achievement.points }} {{ t('points') }}</span>
+                        <span class="status-badge status-rejected">❌ {{ t('rejected') }}</span>
+                    </div>
+                </div>
+
+                <div class="achievement-title">{{ achievement.title }}</div>
+
+                <div class="achievement-details">
+                    <div class="detail-item">
+                        <span class="detail-label">{{ t('category') }}</span>
+                        <span class="detail-value">{{ t(achievement.category) if achievement.category else 'Не указана' }}</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">{{ t('date') }}</span>
+                        <span class="detail-value">{{ achievement.created_at.strftime('%d.%m.%Y') }}</span>
+                    </div>
+                </div>
+
+                {% if achievement.file_path %}
+                <a href="{{ achievement.file_path }}" target="_blank" class="file-link">
+                    📎 Просмотреть файл
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">📭</div>
+            <div class="empty-state-text">Нет отклонённых достижений</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function showTab(tabName) {
+    // Скрыть все вкладки
+    const contents = document.querySelectorAll('.tab-content');
+    contents.forEach(content => content.classList.remove('active'));
+    
+    // Убрать активность со всех кнопок
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(tab => tab.classList.remove('active'));
+    
+    // Показать выбранную вкладку
+    document.getElementById(tabName).classList.add('active');
+    
+    // Активировать кнопку
+    event.target.classList.add('active');
+}
+</script>
+
+{% endblock %}
