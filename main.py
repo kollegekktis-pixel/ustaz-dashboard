@@ -243,6 +243,9 @@ TRANSLATIONS = {
         "all_users": "Все пользователи",
         "create_user": "Создать пользователя",
         "pending_review": "На проверке",
+        "approved": "Утверждено",
+        "rejected": "Отказано",
+        "moderate": "Модерация",
         "admin_role": "Админ",
         "teacher_role": "Учитель",
         
@@ -402,6 +405,9 @@ TRANSLATIONS = {
         "all_users": "Барлық қолданушылар",
         "create_user": "Қолданушы жасау",
         "pending_review": "Тексеруде",
+        "approved": "Бекітілген",
+        "rejected": "Қабылданбаған",
+        "moderate": "Тексеру",
         "admin_role": "Админ",
         "teacher_role": "Мұғалім",
         
