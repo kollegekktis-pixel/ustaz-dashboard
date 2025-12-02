@@ -1,0 +1,468 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ t('moderate') }} - {{ t('app_title') }}{% endblock %}
+
+{% block content %}
+<style>
+    .moderate-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .moderate-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .moderate-header h1 {
+        color: white;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .moderate-header p {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #7030A0;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .achievements-table {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        background: #7030A0;
+        color: white;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+    }
+
+    td {
+        padding: 1rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    tr:hover {
+        background: #f8f5fc;
+    }
+
+    .teacher-name {
+        font-weight: 600;
+        color: #7030A0;
+    }
+
+    .achievement-title {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .achievement-details {
+        font-size: 0.85rem;
+        color: #666;
+        margin-top: 0.25rem;
+    }
+
+    .points-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #7030A0 0%, #9b59d0 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-approved {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 0.85rem;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .btn-approve {
+        background: #4CAF50;
+        color: white;
+    }
+
+    .btn-approve:hover:not(:disabled) {
+        background: #45a049;
+    }
+
+    .btn-reject {
+        background: #f44336;
+        color: white;
+    }
+
+    .btn-reject:hover:not(:disabled) {
+        background: #da190b;
+    }
+
+    .btn-view {
+        background: #2196F3;
+        color: white;
+    }
+
+    .btn-view:hover {
+        background: #0b7dda;
+    }
+
+    .filter-tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        background: white;
+        padding: 1rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        flex-wrap: wrap;
+    }
+
+    .filter-tab {
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        border: 2px solid transparent;
+    }
+
+    .filter-tab.active {
+        background: linear-gradient(135deg, #7030A0 0%, #9b59d0 100%);
+        color: white;
+    }
+
+    .filter-tab:not(.active):hover {
+        border-color: #7030A0;
+        color: #7030A0;
+    }
+
+    .date-text {
+        font-size: 0.85rem;
+        color: #999;
+    }
+
+    .info-box {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: #e3f2fd;
+        border-radius: 15px;
+        border-left: 4px solid #2196F3;
+    }
+
+    @media (max-width: 768px) {
+        .moderate-container {
+            padding: 1rem;
+        }
+
+        table {
+            font-size: 0.85rem;
+        }
+
+        th, td {
+            padding: 0.75rem 0.5rem;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .filter-tabs {
+            flex-wrap: wrap;
+        }
+    }
+</style>
+
+<div class="moderate-container">
+    <div class="moderate-header">
+        <h1>✅ {{ t('moderate') }}</h1>
+        <p>Проверка и утверждение достижений педагогов</p>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-number">{{ achievements|length }}</div>
+            <div class="stat-label">Всего достижений</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">
+                {{ achievements|selectattr('status', 'equalto', 'pending')|list|length }}
+            </div>
+            <div class="stat-label">На проверке</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">
+                {{ achievements|selectattr('status', 'equalto', 'approved')|list|length }}
+            </div>
+            <div class="stat-label">Утверждено</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">
+                {{ achievements|selectattr('status', 'equalto', 'rejected')|list|length }}
+            </div>
+            <div class="stat-label">Отклонено</div>
+        </div>
+    </div>
+
+    <div class="filter-tabs">
+        <div class="filter-tab active" onclick="filterByStatus('all')">Все достижения</div>
+        <div class="filter-tab" onclick="filterByStatus('pending')">⏳ На проверке</div>
+        <div class="filter-tab" onclick="filterByStatus('approved')">✅ Утверждено</div>
+        <div class="filter-tab" onclick="filterByStatus('rejected')">❌ Отклонено</div>
+    </div>
+
+    <div class="achievements-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Учитель</th>
+                    <th>Достижение</th>
+                    <th>Категория</th>
+                    <th>Баллы</th>
+                    <th>Статус</th>
+                    <th>Дата</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody id="achievementsTable">
+                {% if achievements %}
+                    {% for ach in achievements %}
+                    <tr data-status="{{ ach.status }}">
+                        <td>
+                            <div class="teacher-name">{{ ach.user.full_name }}</div>
+                            <div class="achievement-details">{{ ach.user.school }}</div>
+                        </td>
+                        <td>
+                            <div class="achievement-title">{{ ach.title }}</div>
+                            <div class="achievement-details">
+                                {{ ach.level }} уровень
+                                {% if ach.place %} | {{ ach.place }} место{% endif %}
+                                {% if ach.student_name %} | {{ ach.student_name }}{% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <span style="display: inline-block; background: #f0f0f0; padding: 0.25rem 0.75rem; border-radius: 15px; font-size: 0.85rem;">
+                                {{ ach.achievement_type }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="points-badge">{{ ach.points }} б.</span>
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ ach.status }}">
+                                {% if ach.status == 'pending' %}
+                                    ⏳ На проверке
+                                {% elif ach.status == 'approved' %}
+                                    ✅ Утверждено
+                                {% elif ach.status == 'rejected' %}
+                                    ❌ Отклонено
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="date-text">{{ ach.created_at.strftime('%d.%m.%Y') }}</span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                {% if ach.file_path %}
+                                <a href="{{ ach.file_path }}" target="_blank" class="btn btn-view">👁️</a>
+                                {% endif %}
+                                
+                                {% if ach.status == 'pending' %}
+                                <button class="btn btn-approve" onclick="approveAchievement({{ ach.id }}, this)">
+                                    ✅ Утвердить
+                                </button>
+                                <button class="btn btn-reject" onclick="rejectAchievement({{ ach.id }}, this)">
+                                    ❌ Отклонить
+                                </button>
+                                {% elif ach.status == 'approved' %}
+                                <button class="btn btn-reject" onclick="rejectAchievement({{ ach.id }}, this)">
+                                    ❌ Отклонить
+                                </button>
+                                {% elif ach.status == 'rejected' %}
+                                <button class="btn btn-approve" onclick="approveAchievement({{ ach.id }}, this)">
+                                    ✅ Утвердить
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 2rem; color: #999;">
+                            Нет достижений для проверки
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="info-box">
+        <strong>ℹ️ Инструкция для {{ t(user.role) }}:</strong>
+        <ul style="margin-top: 1rem; margin-left: 1.5rem;">
+            <li>Нажмите 👁️ чтобы просмотреть подтверждающий документ</li>
+            <li>Нажмите ✅ Утвердить чтобы подтвердить достижение</li>
+            <li>Нажмите ❌ Отклонить если документ не соответствует требованиям</li>
+            <li>Используйте фильтры для отображения достижений по статусу</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+function approveAchievement(achievementId, button) {
+    if (!confirm('Утвердить это достижение?')) return;
+    
+    button.disabled = true;
+    button.textContent = '⏳ Обработка...';
+    
+    fetch(`/api/achievements/${achievementId}/approve`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('✅ Достижение утверждено!');
+            location.reload();
+        } else {
+            alert('❌ Ошибка: ' + data.message);
+            button.disabled = false;
+            button.textContent = '✅ Утвердить';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('❌ Ошибка при утверждении');
+        button.disabled = false;
+        button.textContent = '✅ Утвердить';
+    });
+}
+
+function rejectAchievement(achievementId, button) {
+    const reason = prompt('Укажите причину отклонения (опционально):');
+    if (reason === null) return; // Отменено
+    
+    button.disabled = true;
+    button.textContent = '⏳ Обработка...';
+    
+    fetch(`/api/achievements/${achievementId}/reject`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('❌ Достижение отклонено!');
+            location.reload();
+        } else {
+            alert('❌ Ошибка: ' + data.message);
+            button.disabled = false;
+            button.textContent = '❌ Отклонить';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('❌ Ошибка при отклонении');
+        button.disabled = false;
+        button.textContent = '❌ Отклонить';
+    });
+}
+
+function filterByStatus(status) {
+    const rows = document.querySelectorAll('#achievementsTable tr[data-status]');
+    const tabs = document.querySelectorAll('.filter-tab');
+    
+    // Обновить активную вкладку
+    tabs.forEach(tab => tab.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    // Фильтровать строки
+    rows.forEach(row => {
+        if (status === 'all' || row.dataset.status === status) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+</script>
+
+{% endblock %}
