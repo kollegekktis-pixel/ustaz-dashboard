@@ -509,6 +509,7 @@ def forgot_password_page(request: Request, lang: str = Depends(get_language)):
 
 @app.post("/forgot-password")
 def forgot_password_post(
+    request: Request,  # ← ДОБАВЬ ЭТУ СТРОКУ!
     username: str = Form(...),
     db: Session = Depends(get_db),
     lang: str = Depends(get_language)
@@ -522,7 +523,7 @@ def forgot_password_post(
     # Всегда показываем успех (защита от перебора логинов)
     if not user:
         return templates.TemplateResponse("forgot_password.html", {
-            "request": request,
+            "request": request,  # ← Теперь работает!
             "success": t("reset_link_sent") if t("reset_link_sent") != "reset_link_sent" else "Если пользователь существует, ссылка для восстановления создана",
             "lang": lang,
             "t": t
@@ -535,7 +536,7 @@ def forgot_password_post(
     reset_url = f"/reset-password/{reset_token}"
     
     return templates.TemplateResponse("forgot_password.html", {
-        "request": request,
+        "request": request,  # ← И тут работает!
         "success": t("reset_link_created") if t("reset_link_created") != "reset_link_created" else "Ссылка для восстановления пароля создана!",
         "reset_link": reset_url,
         "lang": lang,
@@ -575,6 +576,7 @@ def reset_password_page(
 @app.post("/reset-password/{token}")
 def reset_password_post(
     token: str,
+    request: Request,
     new_password: str = Form(...),
     confirm_password: str = Form(...),
     db: Session = Depends(get_db),
