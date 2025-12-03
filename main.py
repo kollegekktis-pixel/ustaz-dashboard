@@ -1083,11 +1083,22 @@ async def add_achievement(
             t = lambda key: get_translation(lang, key)
             return RedirectResponse(url=f"/{achievement_type.replace('_', '-')}?error=file_too_large", status_code=303)
         
+       # ЗАГРУЗКА ФАЙЛА В CLOUDINARY
+    file_path = None
+    if file:
+        content = await file.read()
+        
+        # Проверка размера (5MB = 5 * 1024 * 1024 bytes)
+        if len(content) > 5 * 1024 * 1024:
+            t = lambda key: get_translation(lang, key)
+            return RedirectResponse(url=f"/{achievement_type.replace('_', '-')}?error=file_too_large", status_code=303)
+        
         file_ext = file.filename.split(".")[-1].lower()
         
         # Загрузить в Cloudinary
         try:
-            public_id = f"jetistik_hub/{uuid.uuid4()}"
+            # ДОБАВИТЬ РАСШИРЕНИЕ В PUBLIC_ID
+            public_id = f"jetistik_hub/{uuid.uuid4()}.{file_ext}"  # ← С РАСШИРЕНИЕМ!
             
             # Определить тип файла
             if file_ext == 'pdf':
