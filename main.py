@@ -1072,16 +1072,6 @@ async def add_achievement(
         elif category == 'specialist_cooperation':
             # Сотрудничество со специалистами - фиксированно
             calculated_points = 10
-    
-  # ЗАГРУЗКА ФАЙЛА В CLOUDINARY
-    file_path = None
-    if file:
-        content = await file.read()
-        
-        # Проверка размера (5MB = 5 * 1024 * 1024 bytes)
-        if len(content) > 5 * 1024 * 1024:
-            t = lambda key: get_translation(lang, key)
-            return RedirectResponse(url=f"/{achievement_type.replace('_', '-')}?error=file_too_large", status_code=303)
         
        # ЗАГРУЗКА ФАЙЛА В CLOUDINARY
     file_path = None
