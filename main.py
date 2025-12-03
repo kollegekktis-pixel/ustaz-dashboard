@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Optional
 from urllib.parse import urlparse
 import uuid
+from io import BytesIO
 
 import bcrypt
 import cloudinary
@@ -1080,24 +1081,30 @@ async def add_achievement(
         
         file_ext = file.filename.split(".")[-1]
         
-        # Попытаться загрузить в Cloudinary
+        # Загрузить в Cloudinary
         try:
-            public_id = f"jetistik_hub/{uuid.uuid4()}"
+            # ДОБАВИТЬ РАСШИРЕНИЕ В PUBLIC_ID!
+            public_id = f"jetistik_hub/{uuid.uuid4()}.{file_ext}"  # ← С РАСШИРЕНИЕМ!
+            
+            # Определить тип файла
+            if file_ext == 'pdf':
+                resource_type = "raw"  # PDF загружается как raw
+            else:
+                resource_type = "image"  # Картинки как image
             
             upload_result = cloudinary.uploader.upload(
                 content,
                 public_id=public_id,
-                resource_type="auto"
+                resource_type=resource_type
             )
             
             file_path = upload_result['secure_url']
-            print(f"✅ File uploaded to Cloudinary: {file_path}")
+            print(f"✅ File uploaded to Cloudinary: {file_path} (type: {resource_type})")
             
         except Exception as e:
-            print(f"⚠️ Cloudinary upload error: {e}")
-            # Fallback: сохранить локально
-            unique_filename = f"{uuid.uuid4()}.{file_ext}"
-            local_path = os.path.join(UPLOAD_DIR, unique_filename)
+            print(f"❌ Cloudinary upload error: {e}")
+            t = lambda key: get_translation(lang, key)
+            return RedirectResponse(url=f"/{achievement_type.replace('_', '-')}?error=upload_failed", status_code=303))
             
             with open(local_path, "wb") as f:
                 f.write(content)
