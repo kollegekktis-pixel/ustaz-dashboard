@@ -474,7 +474,7 @@ def get_current_user(session_token: Optional[str] = Cookie(None), db: Session = 
 # ===========================
 @app.get("/", response_class=HTMLResponse)
 def root():
-    return RedirectResponse(url="/login")
+    return RedirectResponse("/login", status_code=303)
 
 
 @app.get("/set-language/{lang}")
@@ -659,7 +659,7 @@ def login_post(
 @app.get("/register", response_class=HTMLResponse)
 def register_page(request: Request, lang: str = Depends(get_language)):
     if not ALLOW_REGISTRATION:
-        return RedirectResponse(url="/login")
+        return RedirectResponse("/login", status_code=303)
     t = lambda key: get_translation(lang, key)
     return templates.TemplateResponse("register.html", {"request": request, "lang": lang, "t": t})
 
@@ -680,7 +680,7 @@ def register_post(
     t = lambda key: get_translation(lang, key)
     
     if not ALLOW_REGISTRATION:
-        return RedirectResponse(url="/login")
+        return RedirectResponse("/login", status_code=303)
     
     error = None
     if len(username) < 3:
@@ -738,7 +738,7 @@ def home_page(
     lang: str = Depends(get_language)
 ):
     if not user:
-        return RedirectResponse(url="/login")
+        return RedirectResponse("/login", status_code=303)
     
     t = lambda key: get_translation(lang, key)
     return templates.TemplateResponse("home.html", {
@@ -757,7 +757,7 @@ def jeke_cabinet(
     lang: str = Depends(get_language)
 ):
     if not user:
-        return RedirectResponse(url="/login")
+        return RedirectResponse("/login", status_code=303)
     
     t = lambda key: get_translation(lang, key)
     achievements = db.query(Achievement).filter(Achievement.user_id == user.id).all()
@@ -785,7 +785,7 @@ def jetistik_alany(
     lang: str = Depends(get_language)
 ):
     if not user:
-        return RedirectResponse(url="/login")
+        return RedirectResponse("/login", status_code=303)
     
     t = lambda key: get_translation(lang, key)
     return templates.TemplateResponse("jetistik_alany.html", {
@@ -804,7 +804,7 @@ def oqushy_status(
     lang: str = Depends(get_language)
 ):
     if not user:
-        return RedirectResponse(url="/login")
+        return RedirectResponse("/login", status_code=303)
     
     t = lambda key: get_translation(lang, key)
     achievements = db.query(Achievement).filter(
@@ -829,7 +829,7 @@ def sapa_qorzhyn(
     lang: str = Depends(get_language)
 ):
     if not user:
-        return RedirectResponse(url="/login")
+        return RedirectResponse("/login", status_code=303)
     
     t = lambda key: get_translation(lang, key)
     achievements = db.query(Achievement).filter(
@@ -854,7 +854,7 @@ def qogam_serpin(
     lang: str = Depends(get_language)
 ):
     if not user:
-        return RedirectResponse(url="/login")
+        return RedirectResponse("/login", status_code=303)
     
     t = lambda key: get_translation(lang, key)
     achievements = db.query(Achievement).filter(
@@ -879,7 +879,7 @@ def tarbie_arnasy(
     lang: str = Depends(get_language)
 ):
     if not user:
-        return RedirectResponse(url="/login")
+        return RedirectResponse("/login", status_code=303)
     
     t = lambda key: get_translation(lang, key)
     achievements = db.query(Achievement).filter(
@@ -969,7 +969,7 @@ def reports_page(
     lang: str = Depends(get_language)
 ):
     if not user:
-        return RedirectResponse(url="/login")
+        return RedirectResponse("/login", status_code=303)
     
     # Только админ может видеть отчеты
     if not user.is_admin:
@@ -1007,7 +1007,7 @@ async def add_achievement(
     lang: str = Depends(get_language)
 ):
     if not user:
-        return RedirectResponse(url="/login")
+        return RedirectResponse("/login", status_code=303)
     
     # Расчёт баллов
     calculated_points = 0
@@ -1203,7 +1203,7 @@ def make_me_admin(
 ):
     """Простой маршрут: делает текущего пользователя админом"""
     if not user:
-        return RedirectResponse(url="/login")
+        return RedirectResponse("/login", status_code=303)
     
     # Сделать пользователя админом
     user.is_admin = True
