@@ -171,7 +171,7 @@ TRANSLATIONS = {
         "school": "Школа",
         "subject": "Предмет",
         "teacher_category": "Категория",
-        "experience": "Стаж",
+        "experience": "Стаж в данной организации",
         
         # Достижения учеников
         "student_name": "ФИО ученика",
@@ -333,7 +333,7 @@ TRANSLATIONS = {
         "school": "Мектеп",
         "subject": "Пән",
         "teacher_category": "Санат",
-        "experience": "Тәжірибе",
+        "experience": "Осы ұйымдағы еңбек өтілі",
         
         # Оқушы жетістіктері
         "student_name": "Оқушының аты-жөні",
@@ -496,7 +496,139 @@ def set_language(request: Request, lang: str):
 def login_page(request: Request, lang: str = Depends(get_language)):
     t = lambda key: get_translation(lang, key)
     return templates.TemplateResponse("login.html", {"request": request, "lang": lang, "t": t})
+@app.get("/forgot-password", response_class=HTMLResponse)
+def forgot_password_page(request: Request, lang: str = Depends(get_language)):
+    """Страница запроса восстановления пароля"""
+    t = lambda key: get_translation(lang, key)
+    return templates.TemplateResponse("forgot_password.html", {
+        "request": request,
+        "lang": lang,
+        "t": t
+    })
 
+
+@app.post("/forgot-password")
+def forgot_password_post(
+    username: str = Form(...),
+    db: Session = Depends(get_db),
+    lang: str = Depends(get_language)
+):
+    """Обработка запроса восстановления пароля"""
+    t = lambda key: get_translation(lang, key)
+    
+    # Найти пользователя
+    user = db.query(User).filter(User.username == username).first()
+    
+    # Всегда показываем успех (защита от перебора логинов)
+    if not user:
+        return templates.TemplateResponse("forgot_password.html", {
+            "request": {},
+            "success": t("reset_link_sent") if t("reset_link_sent") != "reset_link_sent" else "Если пользователь существует, ссылка для восстановления создана",
+            "lang": lang,
+            "t": t
+        })
+    
+    # Создать токен восстановления (действителен 1 час)
+    reset_token = serializer.dumps(user.id, salt="password-reset")
+    
+    # ПОКАЗАТЬ ССЫЛКУ НА ЭКРАНЕ (без email!)
+    reset_url = f"/reset-password/{reset_token}"
+    
+    return templates.TemplateResponse("forgot_password.html", {
+        "request": {},
+        "success": t("reset_link_created") if t("reset_link_created") != "reset_link_created" else "Ссылка для восстановления пароля создана!",
+        "reset_link": reset_url,
+        "lang": lang,
+        "t": t
+    })
+
+
+@app.get("/reset-password/{token}", response_class=HTMLResponse)
+def reset_password_page(
+    token: str,
+    request: Request,
+    lang: str = Depends(get_language)
+):
+    """Страница установки нового пароля"""
+    t = lambda key: get_translation(lang, key)
+    
+    try:
+        # Проверить токен (действителен 1 час)
+        user_id = serializer.loads(token, salt="password-reset", max_age=3600)
+        
+        return templates.TemplateResponse("reset_password.html", {
+            "request": request,
+            "token": token,
+            "lang": lang,
+            "t": t
+        })
+        
+    except:
+        return templates.TemplateResponse("reset_password.html", {
+            "request": request,
+            "error": t("reset_token_invalid") if t("reset_token_invalid") != "reset_token_invalid" else "Ссылка недействительна или истекла. Запросите новую ссылку.",
+            "lang": lang,
+            "t": t
+        })
+
+
+@app.post("/reset-password/{token}")
+def reset_password_post(
+    token: str,
+    new_password: str = Form(...),
+    confirm_password: str = Form(...),
+    db: Session = Depends(get_db),
+    lang: str = Depends(get_language)
+):
+    """Обработка установки нового пароля"""
+    t = lambda key: get_translation(lang, key)
+    
+    try:
+        # Проверить токен
+        user_id = serializer.loads(token, salt="password-reset", max_age=3600)
+        
+    except:
+        return templates.TemplateResponse("reset_password.html", {
+            "request": {},
+            "token": token,
+            "error": t("reset_token_invalid") if t("reset_token_invalid") != "reset_token_invalid" else "Ссылка недействительна или истекла",
+            "lang": lang,
+            "t": t
+        })
+    
+    # Проверки
+    error = None
+    if len(new_password) < 6:
+        error = t("error_short_password")
+    elif new_password != confirm_password:
+        error = t("error_passwords_dont_match")
+    
+    if error:
+        return templates.TemplateResponse("reset_password.html", {
+            "request": {},
+            "token": token,
+            "error": error,
+            "lang": lang,
+            "t": t
+        })
+    
+    # Найти пользователя и обновить пароль
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return templates.TemplateResponse("reset_password.html", {
+            "request": {},
+            "token": token,
+            "error": t("user_not_found") if t("user_not_found") != "user_not_found" else "Пользователь не найден",
+            "lang": lang,
+            "t": t
+        })
+    
+    # Обновить пароль
+    user.password_hash = hash_password(new_password)
+    db.commit()
+    
+    # Перенаправить на страницу входа с сообщением
+    return RedirectResponse(url="/login?success=password_reset", status_code=303)
 
 @app.post("/login")
 def login_post(
