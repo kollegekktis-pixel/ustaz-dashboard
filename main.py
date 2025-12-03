@@ -1106,8 +1106,11 @@ async def add_achievement(
             else:
                 resource_type = "image"  # Картинки как image
             
+            # СОЗДАТЬ FILE-LIKE ОБЪЕКТ
+            file_stream = BytesIO(content)
+            
             upload_result = cloudinary.uploader.upload(
-                file_stream,  # ← file-like объект - РАБОТАЕТ!
+                file_stream,
                 public_id=public_id,
                 resource_type=resource_type
             )
