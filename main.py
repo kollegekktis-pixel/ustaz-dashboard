@@ -1091,9 +1091,9 @@ async def add_achievement(
                 resource_type = "raw"  # PDF загружается как raw
             else:
                 resource_type = "image"  # Картинки как image
-            
+            file_stream = BytesIO(content)
             upload_result = cloudinary.uploader.upload(
-                content,
+                file_stream,
                 public_id=public_id,
                 resource_type=resource_type
             )
@@ -1104,7 +1104,7 @@ async def add_achievement(
         except Exception as e:
             print(f"❌ Cloudinary upload error: {e}")
             t = lambda key: get_translation(lang, key)
-            return RedirectResponse(url=f"/{achievement_type.replace('_', '-')}?error=upload_failed", status_code=303))
+            return RedirectResponse(url=f"/{achievement_type.replace('_', '-')}?error=upload_failed", status_code=303)
             
             with open(local_path, "wb") as f:
                 f.write(content)
