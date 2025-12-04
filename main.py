@@ -1093,6 +1093,8 @@ async def add_achievement(
                 resource_type = "image"  # Картинки как image
             
             file_stream = BytesIO(content)  # ← Создать file-like объект
+            file_stream.seek(0)
+            
             upload_result = cloudinary.uploader.upload(
                 file_stream,
                 public_id=public_id,
