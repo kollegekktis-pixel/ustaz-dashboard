@@ -1,0 +1,159 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ t('edit_profile') }} - {{ t('app_title') }}{% endblock %}
+
+{% block content %}
+<style>
+    .profile-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+    }
+
+    .profile-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2.5rem;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .profile-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .profile-header h1 {
+        color: #7030A0;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #7030A0;
+        box-shadow: 0 0 0 3px rgba(112, 48, 160, 0.1);
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, #7030A0 0%, #9b59d0 100%);
+        color: white;
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        width: 100%;
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(112, 48, 160, 0.4);
+    }
+
+    .btn-back {
+        display: inline-block;
+        background: white;
+        color: #7030A0;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
+    }
+
+    .success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+</style>
+
+<div class="profile-container">
+    <a href="/home" class="btn-back">← {{ t('back') }}</a>
+
+    <div class="profile-card">
+        <div class="profile-header">
+            <h1>✏️ {{ t('edit_profile') }}</h1>
+        </div>
+
+        {% if request.query_params.get('success') == 'updated' %}
+        <div class="success-message">
+            ✅ {{ t('profile_updated') }}
+        </div>
+        {% endif %}
+
+        <form method="post" action="/update-profile">
+            <div class="form-group">
+                <label>{{ t('full_name') }} *</label>
+                <input type="text" name="full_name" value="{{ user.full_name }}" required>
+            </div>
+
+            <div class="form-group">
+                <label>{{ t('school') }}</label>
+                <input type="text" name="school" value="{{ user.school or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label>{{ t('subject') }}</label>
+                <input type="text" name="subject" value="{{ user.subject or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label>{{ t('teacher_category') }}</label>
+                <select name="teacher_category">
+                    <option value="">{{ t('select_category') }}</option>
+                    <option value="without_category" {{ 'selected' if user.teacher_category == 'without_category' else '' }}>{{ t('category_without') }}</option>
+                    <option value="second_category" {{ 'selected' if user.teacher_category == 'second_category' else '' }}>{{ t('category_second') }}</option>
+                    <option value="first_category" {{ 'selected' if user.teacher_category == 'first_category' else '' }}>{{ t('category_first') }}</option>
+                    <option value="pedagogical_researcher" {{ 'selected' if user.teacher_category == 'pedagogical_researcher' else '' }}>{{ t('category_researcher') }}</option>
+                    <option value="master_teacher" {{ 'selected' if user.teacher_category == 'master_teacher' else '' }}>{{ t('category_master') }}</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>{{ t('experience') }}</label>
+                <input type="number" name="experience" value="{{ user.experience or 0 }}" min="0">
+            </div>
+
+            <button type="submit" class="btn-save">
+                💾 {{ t('save_changes') }}
+            </button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
