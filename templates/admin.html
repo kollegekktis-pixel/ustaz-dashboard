@@ -1,0 +1,425 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ t('admin_panel') }} - {{ t('app_title') }}{% endblock %}
+
+{% block content %}
+<style>
+    .admin-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .admin-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .admin-header h1 {
+        color: white;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #7030A0;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .card h2 {
+        color: #7030A0;
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #7030A0;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #7030A0 0%, #9b59d0 100%);
+        color: white;
+        padding: 0.75rem 2rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(112, 48, 160, 0.3);
+    }
+
+    .btn-delete {
+        background: #e74c3c;
+        color: white;
+        padding: 0.4rem 0.8rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+        font-weight: 600;
+    }
+
+    .btn-delete:hover {
+        background: #c0392b;
+        transform: scale(1.05);
+    }
+
+    /* ТАБЛИЦА С ФИКСИРОВАННЫМИ СТОЛБЦАМИ */
+    .table-wrapper {
+        overflow-x: auto;
+        margin-top: 1rem;
+    }
+
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    /* ШИРИНА СТОЛБЦОВ */
+    .users-table th:nth-child(1),
+    .users-table td:nth-child(1) {
+        width: 60px;
+        text-align: center;
+    }
+
+    .users-table th:nth-child(2),
+    .users-table td:nth-child(2) {
+        width: 180px;
+    }
+
+    .users-table th:nth-child(3),
+    .users-table td:nth-child(3) {
+        width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .users-table th:nth-child(4),
+    .users-table td:nth-child(4) {
+        width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .users-table th:nth-child(5),
+    .users-table td:nth-child(5) {
+        width: 140px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .users-table th:nth-child(6),
+    .users-table td:nth-child(6) {
+        width: 160px;
+    }
+
+    .users-table th:nth-child(7),
+    .users-table td:nth-child(7) {
+        width: 140px;
+    }
+
+    .users-table th:nth-child(8),
+    .users-table td:nth-child(8) {
+        width: 80px;
+        text-align: center;
+        font-weight: bold;
+        color: #7030A0;
+    }
+
+    .users-table th:nth-child(9),
+    .users-table td:nth-child(9) {
+        width: 90px;
+        text-align: center;
+    }
+
+    .users-table th {
+        background: #7030A0;
+        color: white;
+        padding: 1rem 0.75rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .users-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 0.9rem;
+    }
+
+    .users-table tr:hover {
+        background: #f8f5fc;
+    }
+
+    .admin-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+        color: #333;
+        padding: 0.4rem 0.8rem;
+        border-radius: 15px;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .teacher-badge {
+        display: inline-block;
+        background: #e0e0e0;
+        color: #666;
+        padding: 0.4rem 0.8rem;
+        border-radius: 15px;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        font-weight: 600;
+    }
+
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    @media (max-width: 1200px) {
+        .users-table {
+            font-size: 0.85rem;
+        }
+        
+        .users-table th,
+        .users-table td {
+            padding: 0.6rem 0.5rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .admin-container {
+            padding: 1rem;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .users-table {
+            font-size: 0.75rem;
+        }
+
+        .users-table th,
+        .users-table td {
+            padding: 0.5rem 0.3rem;
+        }
+    }
+</style>
+
+<div class="admin-container">
+    <div class="admin-header">
+        <h1>👑 {{ t('admin_panel') }}</h1>
+    </div>
+
+    <!-- ALERTS -->
+    {% if request.query_params.get('success') == 'user_deleted' %}
+    <div class="alert alert-success">
+        ✅ {{ t('user_deleted') }}
+    </div>
+    {% endif %}
+
+    {% if request.query_params.get('error') == 'cannot_delete_yourself' %}
+    <div class="alert alert-error">
+        ⚠️ {{ t('cannot_delete_yourself') }}
+    </div>
+    {% endif %}
+
+    {% if request.query_params.get('error') == 'user_not_found' %}
+    <div class="alert alert-error">
+        ❌ {{ t('user_not_found') }}
+    </div>
+    {% endif %}
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ user_data|length }}</div>
+            <div class="stat-label">{{ t('total_teachers') if t('total_teachers') else 'Всего пользователей' }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">
+                {{ user_data|selectattr('user.is_admin', 'equalto', 0)|list|length }}
+            </div>
+            <div class="stat-label">{{ t('teacher_role') }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">
+                {{ user_data|selectattr('user.is_admin', 'equalto', 1)|list|length }}
+            </div>
+            <div class="stat-label">{{ t('admin_role') }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ pending_achievements|length }}</div>
+            <div class="stat-label">{{ t('pending_achievements') }}</div>
+        </div>
+    </div>
+
+    <!-- CREATE USER FORM -->
+    <div class="card">
+        <h2>➕ {{ t('create_user') }}</h2>
+        <form method="post" action="/create-user">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>{{ t('username') }} *</label>
+                    <input name="username" type="text" required>
+                </div>
+                <div class="form-group">
+                    <label>{{ t('full_name') }} *</label>
+                    <input name="full_name" type="text" required>
+                </div>
+                <div class="form-group">
+                    <label>{{ t('password') }} *</label>
+                    <input name="password" type="password" required>
+                </div>
+                <div class="form-group">
+                    <label>{{ t('role') }} *</label>
+                    <select name="role" required>
+                        <option value="teacher">{{ t('teacher_role') }}</option>
+                        <option value="admin">{{ t('admin_role') }}</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn-primary">{{ t('create_user') }}</button>
+        </form>
+    </div>
+
+    <!-- USERS TABLE -->
+    <div class="card">
+        <h2>👥 {{ t('all_users') }}</h2>
+
+        <div class="table-wrapper">
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>🏆</th>
+                        <th>{{ t('full_name') }}</th>
+                        <th>{{ t('username') }}</th>
+                        <th>{{ t('school') }}</th>
+                        <th>{{ t('subject') }}</th>
+                        <th>{{ t('teacher_category') }}</th>
+                        <th>{{ t('status') }}</th>
+                        <th>{{ t('points') }}</th>
+                        <th>{{ t('actions') if t('actions') else 'Действия' }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in user_data %}
+                    {% set u = item.user %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><strong>{{ u.full_name }}</strong></td>
+                        <td title="{{ u.username }}">{{ u.username }}</td>
+                        <td title="{{ u.school or 'Не указано' }}">{{ u.school or 'Не указано' }}</td>
+                        <td title="{{ u.subject or '-' }}">{{ u.subject or '-' }}</td>
+                        <td>{{ u.category or '-' }}</td>
+                        <td>
+                            {% if u.is_admin %}
+                                <span class="admin-badge">👑 Admin</span>
+                            {% else %}
+                                <span class="teacher-badge">👨‍🏫 Teacher</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.points }}</td>
+                        <td>
+                            <form method="post" action="/delete-user/{{ u.id }}" style="display: inline;" onsubmit="return confirm('{{ t('confirm_delete') }}');">
+                                <button type="submit" class="btn-delete">🗑️ {{ t('delete') }}</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if request.query_params.get('error') == 'username_exists' %}
+<script>
+    alert('{{ t("error_username_exists") }}');
+</script>
+{% endif %}
+
+{% endblock %}
