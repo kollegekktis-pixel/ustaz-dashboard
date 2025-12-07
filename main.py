@@ -167,6 +167,12 @@ TRANSLATIONS = {
         "edit_profile": "Редактировать профиль",
         "save_changes": "Сохранить изменения",
         "profile_updated": "Профиль успешно обновлён",
+        "delete_user": "Удалить пользователя",
+        "user_deleted": "Пользователь успешно удалён",
+        "cannot_delete_yourself": "Нельзя удалить самого себя",
+        "user_not_found": "Пользователь не найден",
+        "confirm_delete": "Вы уверены что хотите удалить этого пользователя? Все его достижения будут удалены!",
+        "actions": "Действия",
         "select_category": "Выберите категорию",
         
         # Профиль
@@ -340,6 +346,12 @@ TRANSLATIONS = {
         "edit_profile": "Профильді өңдеу",
         "save_changes": "Өзгерістерді сақтау",
         "profile_updated": "Профиль сәтті жаңартылды",
+        "delete_user": "Пайдаланушыны жою",
+        "user_deleted": "Пайдаланушы сәтті жойылды",
+        "cannot_delete_yourself": "Өзіңізді жою мүмкін емес",
+        "user_not_found": "Пайдаланушы табылмады",
+        "confirm_delete": "Бұл пайдаланушыны жойғыңыз келетініне сенімдісіз бе? Оның барлық жетістіктері жойылады!",
+        "actions": "Әрекеттер",
         "select_category": "Санатты таңдаңыз",
         
         # Профиль
@@ -1289,8 +1301,34 @@ def create_user(
     db.add(new_user)
     db.commit()
     return RedirectResponse(url="/admin?success=user_created", status_code=303)
+    
 
-
+@app.post("/delete-user/{user_id}")
+def delete_user(
+    user_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if not user or not user.is_admin:
+        return RedirectResponse(url="/home", status_code=303)
+    
+    user_to_delete = db.query(User).filter(User.id == user_id).first()
+    
+    if not user_to_delete:
+        return RedirectResponse(url="/admin?error=user_not_found", status_code=303)
+    
+    if user_to_delete.id == user.id:
+        return RedirectResponse(url="/admin?error=cannot_delete_yourself", status_code=303)
+    
+    # Удалить достижения
+    db.query(Achievement).filter(Achievement.user_id == user_id).delete()
+    
+    # Удалить пользователя
+    db.delete(user_to_delete)
+    db.commit()
+    
+    return RedirectResponse(url="/admin?success=user_deleted", status_code=303)
+    
 # ===========================
 # MAKE ADMIN ROUTE
 # ===========================
