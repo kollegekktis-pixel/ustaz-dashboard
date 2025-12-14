@@ -260,6 +260,10 @@ TRANSLATIONS = {
         "reports": "Рейтинг",
         "school_ratings": "Рейтинг школ",
         "total_teachers": "Всего учителей",
+        "rating_title": "Рейтинг педагогов",
+        "no_rating_data": "Нет данных для рейтинга",
+        "year": "год",
+        "years": "лет",
         
         # Админ
         "admin_panel": "Админ-панель",
@@ -444,6 +448,10 @@ TRANSLATIONS = {
         "reports": "Нәтиже",
         "school_ratings": "Мектептер рейтингі",
         "total_teachers": "Барлық мұғалімдер",
+        "rating_title": "Педагогтар рейтингі",
+        "no_rating_data": "Рейтингке арналған деректер жоқ",
+        "year": "жыл",
+        "years": "жыл",
         
         # Админ
         "admin_panel": "Админ панелі",
