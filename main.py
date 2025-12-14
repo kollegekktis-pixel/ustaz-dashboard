@@ -254,7 +254,7 @@ TRANSLATIONS = {
         "status_rejected": "Отклонено",
         
         # Рейтинг
-        "top_teachers": "Топ-10 учителей",
+        "top_teachers_subtitle": "Топ-10 учителей",
         "rank": "Место",
         "teacher": "Учитель",
         "reports": "Рейтинг",
@@ -442,7 +442,7 @@ TRANSLATIONS = {
         "status_rejected": "Қабылданбаған",
         
         # Рейтинг
-        "top_teachers": "Топ-10 мұғалімдер",
+        "top_teachers_subtitle": "Топ-10 мұғалімдер",
         "rank": "Орын",
         "teacher": "Мұғалім",
         "reports": "Нәтиже",
