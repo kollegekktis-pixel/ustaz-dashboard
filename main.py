@@ -1019,7 +1019,6 @@ def admin_panel(
         "t": t
     })
 
-
 @app.get("/moderate", response_class=HTMLResponse)
 def moderate_page(
     request: Request,
@@ -1027,25 +1026,43 @@ def moderate_page(
     db: Session = Depends(get_db),
     lang: str = Depends(get_language)
 ):
+    """Страница модерации с рейтингом внизу"""
     if not user or not user.is_admin:
         return RedirectResponse(url="/home")
     
-    # Получить все достижения со статусом pending
+    t = lambda key: get_translation(lang, key)
+    
+    # Получить все достижения
     pending_achievements = db.query(Achievement).filter(
         Achievement.status == "pending"
     ).order_by(Achievement.created_at.desc()).all()
     
-    # Получить одобренные
     approved_achievements = db.query(Achievement).filter(
         Achievement.status == "approved"
     ).order_by(Achievement.created_at.desc()).all()
     
-    # Получить отклонённые
     rejected_achievements = db.query(Achievement).filter(
         Achievement.status == "rejected"
     ).order_by(Achievement.created_at.desc()).all()
     
-    t = lambda key: get_translation(lang, key)
+    # ============================================
+    # РЕЙТИНГ ТОП-10 (для отображения внизу)
+    # ============================================
+    
+    all_users = db.query(User).all()
+    
+    user_data = []
+    for u in all_users:
+        total_points = sum(ach.points for ach in u.achievements if ach.status == 'approved')
+        user_data.append({
+            'user': u,
+            'points': total_points
+        })
+    
+    user_data.sort(key=lambda x: x['points'], reverse=True)
+    top_teachers = user_data[:10]
+    
+    # ============================================
     
     return templates.TemplateResponse("moderate.html", {
         "request": request,
@@ -1056,10 +1073,10 @@ def moderate_page(
         "pending_count": len(pending_achievements),
         "approved_count": len(approved_achievements),
         "rejected_count": len(rejected_achievements),
+        "top_teachers": top_teachers,  # ← ДЛЯ РЕЙТИНГА
         "lang": lang,
         "t": t
     })
-
 
 @app.get("/reports", response_class=HTMLResponse)
 def reports_page(
