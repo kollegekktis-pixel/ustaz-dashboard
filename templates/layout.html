@@ -18,6 +18,25 @@
             min-height: 100vh;
             color: #333;
         }
+        {% set hide_animation = request.url.path in ['/admin', '/moderate'] %}
+
+{% if not hide_animation %}
+<!-- Animated background -->
+<div class="edu-bg">
+  <span>🎓</span>
+  <span>📚</span>
+  <span>🧠</span>
+  <span>✏️</span>
+  <span>🏫</span>
+  <span>💡</span>
+</div>
+
+<!-- Moving Logo -->
+<div class="moving-logo">
+  🚂 Jetistik Hub
+</div>
+{% endif %}
+
 
         /* HEADER */
         .topbar {
