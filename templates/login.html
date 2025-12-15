@@ -1,0 +1,245 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ t('login') }} - {{ t('app_title') }}{% endblock %}
+
+{% block content %}
+<style>
+    /* ДЕКОРАТИВНЫЕ ИКОНКИ НА ФОНЕ */
+    .background-icons {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        overflow: hidden;
+        z-index: 0;
+    }
+
+    .bg-icon {
+        position: absolute;
+        font-size: 60px;
+        opacity: 0.12;
+        animation: float 20s infinite ease-in-out;
+        filter: grayscale(20%);
+    }
+
+    @keyframes float {
+        0%, 100% { 
+            transform: translateY(0px) rotate(0deg); 
+        }
+        50% { 
+            transform: translateY(-20px) rotate(5deg); 
+        }
+    }
+
+    /* Позиции иконок (14 штук) */
+    .icon-1 { top: 10%; left: 5%; animation-delay: 0s; }
+    .icon-2 { top: 20%; left: 15%; animation-delay: 2s; font-size: 50px; }
+    .icon-3 { top: 60%; left: 8%; animation-delay: 4s; }
+    .icon-4 { top: 80%; left: 12%; animation-delay: 1s; font-size: 70px; }
+    .icon-5 { top: 15%; right: 10%; animation-delay: 3s; }
+    .icon-6 { top: 40%; right: 5%; animation-delay: 5s; font-size: 55px; }
+    .icon-7 { top: 70%; right: 15%; animation-delay: 2.5s; }
+    .icon-8 { top: 85%; right: 8%; animation-delay: 4.5s; font-size: 65px; }
+    .icon-9 { top: 35%; left: 3%; animation-delay: 1.5s; font-size: 45px; }
+    .icon-10 { top: 50%; right: 3%; animation-delay: 3.5s; font-size: 52px; }
+    .icon-11 { top: 5%; left: 25%; animation-delay: 2.8s; font-size: 48px; }
+    .icon-12 { top: 90%; left: 20%; animation-delay: 4.2s; font-size: 58px; }
+    .icon-13 { top: 25%; right: 25%; animation-delay: 1.8s; font-size: 62px; }
+    .icon-14 { top: 75%; right: 22%; animation-delay: 3.2s; font-size: 46px; }
+
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 200px);
+        position: relative;
+        z-index: 1;
+    }
+
+    .login-card {
+        background: white;
+        border-radius: 20px;
+        padding: 3rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        border: 3px solid #FFFFFF;
+        max-width: 450px;
+        width: 100%;
+        animation: fadeInUp 0.6s ease;
+        position: relative;
+        z-index: 2;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .login-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .login-header h2 {
+        color: #7030A0;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .login-header p {
+        color: #666;
+        font-size: 0.95rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 1rem;
+        border: 2px solid #E0E0E0;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: #7030A0;
+        box-shadow: 0 0 0 3px rgba(112, 48, 160, 0.1);
+    }
+
+    .login-btn {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, #7030A0 0%, #9b59d0 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .login-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(112, 48, 160, 0.3);
+    }
+
+    .register-link {
+        text-align: center;
+        margin-top: 1.5rem;
+        color: #666;
+    }
+
+    .register-link a {
+        color: #7030A0;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .register-link a:hover {
+        text-decoration: underline;
+    }
+
+    .error-message {
+        background: #ffebee;
+        color: #c62828;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .footer-text {
+        text-align: center;
+        margin-top: 2rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+        .login-card {
+            padding: 2rem;
+            margin: 1rem;
+        }
+
+        .bg-icon {
+            font-size: 40px !important;
+        }
+
+        .icon-11, .icon-12, .icon-13, .icon-14 {
+            display: none; /* Скрыть часть иконок на мобильных */
+        }
+    }
+</style>
+
+<!-- ДЕКОРАТИВНЫЕ ИКОНКИ НА ФОНЕ -->
+<div class="background-icons">
+    <div class="bg-icon icon-1">📚</div>
+    <div class="bg-icon icon-2">🎓</div>
+    <div class="bg-icon icon-3">🏆</div>
+    <div class="bg-icon icon-4">⭐</div>
+    <div class="bg-icon icon-5">💡</div>
+    <div class="bg-icon icon-6">✏️</div>
+    <div class="bg-icon icon-7">📝</div>
+    <div class="bg-icon icon-8">🎯</div>
+    <div class="bg-icon icon-9">📊</div>
+    <div class="bg-icon icon-10">🎨</div>
+    <div class="bg-icon icon-11">🔬</div>
+    <div class="bg-icon icon-12">💻</div>
+    <div class="bg-icon icon-13">🌟</div>
+    <div class="bg-icon icon-14">✨</div>
+</div>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <h2>{{ t('welcome') }}</h2>
+            <p>{{ t('login_subtitle') }}</p>
+        </div>
+
+        {% if error %}
+        <div class="error-message">{{ error }}</div>
+        {% endif %}
+
+        <form method="post">
+            <div class="form-group">
+                <label>{{ t('username') }}</label>
+                <input name="username" type="text" required>
+            </div>
+
+            <div class="form-group">
+                <label>{{ t('password') }}</label>
+                <input name="password" type="password" required>
+            </div>
+
+            <button type="submit" class="login-btn">{{ t('login') }}</button>
+        </form>
+
+        <div class="register-link">
+            {{ t('no_account') }} <a href="/register">{{ t('register_here') }}</a>
+        </div>
+    </div>
+</div>
+
+<div class="footer-text">
+    © 2025 Mambetov Sanat. All rights reserved
+</div>
+{% endblock %}
