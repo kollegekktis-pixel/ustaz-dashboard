@@ -17,6 +17,92 @@
             background: linear-gradient(135deg, #7030A0 0%, #5a2480 100%);
             min-height: 100vh;
             color: #333;
+            position: relative;
+        }
+
+        /* ПЛАВАЮЩИЕ ИКОНКИ НА ФОНЕ */
+        .background-decorations {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .bg-icon {
+            position: absolute;
+            font-size: 50px;
+            opacity: 0.1;
+            animation: float 25s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(10deg); }
+        }
+
+        /* 20 иконок разбросаны по всему экрану */
+        .icon-1 { top: 5%; left: 3%; animation-delay: 0s; font-size: 60px; }
+        .icon-2 { top: 15%; left: 12%; animation-delay: 3s; font-size: 45px; }
+        .icon-3 { top: 25%; left: 8%; animation-delay: 6s; font-size: 55px; }
+        .icon-4 { top: 35%; left: 15%; animation-delay: 2s; font-size: 50px; }
+        .icon-5 { top: 45%; left: 5%; animation-delay: 8s; font-size: 48px; }
+        .icon-6 { top: 55%; left: 10%; animation-delay: 4s; font-size: 52px; }
+        .icon-7 { top: 65%; left: 7%; animation-delay: 7s; font-size: 58px; }
+        .icon-8 { top: 75%; left: 13%; animation-delay: 1s; font-size: 46px; }
+        .icon-9 { top: 85%; left: 9%; animation-delay: 5s; font-size: 54px; }
+        .icon-10 { top: 92%; left: 4%; animation-delay: 9s; font-size: 62px; }
+        
+        .icon-11 { top: 8%; right: 6%; animation-delay: 2.5s; font-size: 56px; }
+        .icon-12 { top: 18%; right: 10%; animation-delay: 5.5s; font-size: 49px; }
+        .icon-13 { top: 28%; right: 14%; animation-delay: 8.5s; font-size: 53px; }
+        .icon-14 { top: 38%; right: 7%; animation-delay: 1.5s; font-size: 47px; }
+        .icon-15 { top: 48%; right: 12%; animation-delay: 6.5s; font-size: 59px; }
+        .icon-16 { top: 58%; right: 9%; animation-delay: 3.5s; font-size: 51px; }
+        .icon-17 { top: 68%; right: 11%; animation-delay: 7.5s; font-size: 57px; }
+        .icon-18 { top: 78%; right: 8%; animation-delay: 4.5s; font-size: 44px; }
+        .icon-19 { top: 88%; right: 13%; animation-delay: 9.5s; font-size: 61px; }
+        .icon-20 { top: 95%; right: 5%; animation-delay: 2.8s; font-size: 48px; }
+
+        /* БЕГУЩАЯ НАДПИСЬ JETISTIK HUB ПО ДИАГОНАЛИ */
+        .running-text-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .running-text {
+            position: absolute;
+            white-space: nowrap;
+            font-size: 100px;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.04);
+            animation: scroll-diagonal 60s linear infinite;
+            letter-spacing: 30px;
+            transform-origin: center;
+        }
+
+        @keyframes scroll-diagonal {
+            0% { 
+                transform: translate(-100%, 150%) rotate(-45deg);
+            }
+            100% { 
+                transform: translate(100%, -50%) rotate(-45deg);
+            }
+        }
+
+        /* Контент поверх фона */
+        .topbar, main, .footer {
+            position: relative;
+            z-index: 1000;
         }
 
         /* HEADER */
@@ -30,7 +116,7 @@
             box-shadow: 0 2px 20px rgba(0,0,0,0.1);
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 1001;
         }
 
         .logo-section {
@@ -184,6 +270,7 @@
             min-width: 200px;
             overflow: hidden;
             animation: fadeIn 0.3s ease;
+            z-index: 2000;
         }
 
         @keyframes fadeIn {
@@ -392,7 +479,7 @@
                 overflow: hidden;
                 transition: max-height 0.3s ease;
                 box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-                z-index: 99;
+                z-index: 1500;
             }
 
             .header-right.mobile-menu-open {
@@ -505,6 +592,45 @@
 </head>
 <body>
 
+<!-- ДЕКОРАТИВНЫЙ ФОН -->
+<div class="background-decorations">
+    <!-- ПЛАВАЮЩИЕ ИКОНКИ (20 штук) -->
+    <div class="bg-icon icon-1">📚</div>
+    <div class="bg-icon icon-2">🎓</div>
+    <div class="bg-icon icon-3">🏆</div>
+    <div class="bg-icon icon-4">⭐</div>
+    <div class="bg-icon icon-5">💡</div>
+    <div class="bg-icon icon-6">✏️</div>
+    <div class="bg-icon icon-7">📝</div>
+    <div class="bg-icon icon-8">🎯</div>
+    <div class="bg-icon icon-9">📊</div>
+    <div class="bg-icon icon-10">🎨</div>
+    <div class="bg-icon icon-11">🔬</div>
+    <div class="bg-icon icon-12">💻</div>
+    <div class="bg-icon icon-13">🌟</div>
+    <div class="bg-icon icon-14">✨</div>
+    <div class="bg-icon icon-15">📖</div>
+    <div class="bg-icon icon-16">🎭</div>
+    <div class="bg-icon icon-17">🎪</div>
+    <div class="bg-icon icon-18">🎬</div>
+    <div class="bg-icon icon-19">🎤</div>
+    <div class="bg-icon icon-20">🎸</div>
+</div>
+
+<!-- БЕГУЩАЯ НАДПИСЬ ПАРОВОЗИКОМ ПО ДИАГОНАЛИ -->
+<div class="running-text-container">
+    <div class="running-text" style="top: 0;">
+        JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • 
+    </div>
+    <div class="running-text" style="top: 300px;">
+        JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • 
+    </div>
+    <div class="running-text" style="top: 600px;">
+        JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • JETISTIK HUB • 
+    </div>
+</div>
+
+
 <header class="topbar">
     <div class="logo-section">
         <img src="/static/logo.png" alt="Jetistik Hub" class="logo-img" onerror="this.style.display='none'">
@@ -525,9 +651,20 @@
             <a href="/home" class="nav-link">🏠 {{ t('main_page') }}</a>
             <a href="/jeke-cabinet" class="nav-link">👤 Jeke Cabinet</a>
             
-            {% if user.is_admin %}
-            <!-- Админ: полный доступ -->
+            {% if user.role == 'super_admin' %}
+            <!-- Супер Админ: полный доступ -->
             <a href="/admin" class="nav-link">👑 {{ t('admin_panel') }}</a>
+            <a href="/reports" class="nav-link">📊 {{ t('reports') }}</a>
+            <a href="/moderate" class="nav-link">✅ {{ t('moderate') }}</a>
+            
+            {% elif user.role == 'director' %}
+            <!-- Директор: управление + отчеты -->
+            <a href="/admin" class="nav-link">🏢 {{ t('admin_panel') }}</a>
+            <a href="/reports" class="nav-link">📊 {{ t('reports') }}</a>
+            <a href="/moderate" class="nav-link">✅ {{ t('moderate') }}</a>
+            
+            {% elif user.role == 'methodist' %}
+            <!-- Методист: только проверка достижений -->
             <a href="/moderate" class="nav-link">✅ {{ t('moderate') }}</a>
             {% endif %}
         </nav>
@@ -550,7 +687,6 @@
 
             <div id="menuDropdown" class="dropdown">
                 <a href="/home">{{ t('home') }}</a>
-                <a href="/edit-profile">✏️ {{ t('edit_profile') }}</a>
                 <a href="/logout">{{ t('logout') }}</a>
             </div>
         </div>
