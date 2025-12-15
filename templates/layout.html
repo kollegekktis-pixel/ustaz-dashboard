@@ -17,6 +17,7 @@
             background: linear-gradient(135deg, #7030A0 0%, #5a2480 100%);
             min-height: 100vh;
             color: #333;
+            position: relative;
         }
 
         /* HEADER */
@@ -491,61 +492,55 @@
         }
 
         @media (max-width: 480px) {
-            .footer {
-                padding: 1rem;
-                font-size: 0.8rem;
-            }
-            
-            .contact-btn {
-                font-size: 0.85rem;
-                padding: 0.6rem 1.2rem;
-            }
-            /* === BACKGROUND ICONS === */
-      .edu-bg {
-      position: fixed;
-      inset: 0;
-      overflow: hidden;
-      z-index: -10; /* ключевой момент */
-     }
-
-     .edu-bg span {
-      position: absolute;
-      font-size: 2.5rem;
-      opacity: 0.12;
-      animation: floatIcon 30s linear infinite;
+    .footer {
+        padding: 1rem;
+        font-size: 0.8rem;
     }
+    .contact-btn {
+        font-size: 0.85rem;
+        padding: 0.6rem 1.2rem;
+    }
+}
 
-    @keyframes floatIcon {
-  from {
-    transform: translateY(100vh) rotate(0deg);
-  }
-  to {
-    transform: translateY(-10vh) rotate(360deg);
-  }
+/* === BACKGROUND ICONS === */
+.edu-bg {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    z-index: -10;
+}
+
+.edu-bg span {
+    position: absolute;
+    font-size: 2.5rem;
+    opacity: 0.12;
+    animation: floatIcon 30s linear infinite;
+}
+
+@keyframes floatIcon {
+    from { transform: translateY(100vh) rotate(0deg); }
+    to   { transform: translateY(-10vh) rotate(360deg); }
 }
 
 /* === MOVING LOGO === */
 .moving-logo {
-  position: fixed;
-  bottom: 20px;
-  left: -300px;
-  font-size: 2.1rem;
-  font-weight: 800;
-  color: rgba(255,255,255,0.35);
-  text-shadow: 0 0 12px rgba(255,255,255,0.3);
-  white-space: nowrap;
-  z-index: -5;      /* ниже контента */
-  pointer-events: none;
-  animation: trainMove 40s linear infinite;
+    position: fixed;
+    bottom: 20px;
+    left: -300px;
+    font-size: 2.1rem;
+    font-weight: 800;
+    color: rgba(255,255,255,0.35);
+    text-shadow: 0 0 12px rgba(255,255,255,0.3);
+    white-space: nowrap;
+    z-index: -5;
+    pointer-events: none;
+    animation: trainMove 40s linear infinite;
 }
 
 @keyframes trainMove {
-  from {
-    transform: translate(0, 0);
-  }
-  to {
-    transform: translate(120vw, -80vh);
-  }
+    from { transform: translate(0, 0); }
+    to   { transform: translate(120vw, -80vh); }
+}
         }
     </style>
 </head>
