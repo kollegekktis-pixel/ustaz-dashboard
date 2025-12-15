@@ -264,6 +264,7 @@ TRANSLATIONS = {
         "no_rating_data": "Нет данных для рейтинга",
         "year": "год",
         "years": "лет",
+        "no_pending": "в ожидании",
         
         # Админ
         "admin_panel": "Админ-панель",
@@ -452,6 +453,7 @@ TRANSLATIONS = {
         "no_rating_data": "Рейтингке арналған деректер жоқ",
         "year": "жыл",
         "years": "жыл",
+        "no_pending": "күтілуде",
         
         # Админ
         "admin_panel": "Админ панелі",
