@@ -283,8 +283,8 @@
         .rating-bg {
     background:
         linear-gradient(
-            rgba(255,255,255,0.92),
-            rgba(255,255,255,0.92)
+            rgba(255,255,255,0.65),
+            rgba(255,255,255,0.65)
         ),
         url('/static/images/rating-bg.png') center / cover no-repeat;
 
@@ -495,9 +495,13 @@
     <div class="rating-bg">
 
     <div class="rating-box">
-        <div class="rating-box-header">
-            <h2>🏆 {{ t('rating_title') if t('rating_title') else 'Рейтинг педагогов' }}</h2>
-            <p>{{ t('top_teachers_subtitle') if t('top_teachers_subtitle') else 'ТОП-10 по баллам' }}</p>
+
+        <!-- HEADER С КАРТИНКОЙ -->
+        <div class="rating-header-bg">
+            <div class="rating-box-header">
+                <h2>🏆 {{ t('rating_title') if t('rating_title') else 'Рейтинг педагогов' }}</h2>
+                <p>{{ t('top_teachers_subtitle') if t('top_teachers_subtitle') else 'ТОП-10 по баллам' }}</p>
+            </div>
         </div>
 
         {% if top_teachers %}
@@ -543,186 +547,228 @@
 </div>
 
 <style>
-    /* КОМПАКТНЫЙ РЕЙТИНГ */
-    .rating-box {
-        max-width: 900px;
-        margin: 3rem auto 0;
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-        overflow: hidden;
-    }
+/* ===============================
+   КОМПАКТНЫЙ РЕЙТИНГ
+================================ */
+.rating-box {
+    max-width: 900px;
+    margin: 3rem auto 0;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
 
-    .rating-box-header {
-        background: linear-gradient(135deg, #7030A0 0%, #9b59d0 100%);
-        color: white;
-        padding: 1.5rem;
-        text-align: center;
-    }
+.rating-box-header {
+    background: transparent;
+    color: white;
+    padding: 1.5rem;
+    text-align: center;
+}
 
-    .rating-box-header h2 {
-        font-size: 1.8rem;
-        margin: 0 0 0.5rem 0;
-        font-weight: 700;
-    }
+.rating-box-header h2 {
+    font-size: 1.8rem;
+    margin: 0 0 0.5rem 0;
+    font-weight: 700;
+}
 
-    .rating-box-header p {
-        margin: 0;
-        opacity: 0.9;
-        font-size: 0.95rem;
-    }
+.rating-box-header p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.95rem;
+}
 
-    .rating-scroll {
-        max-height: 500px;
-        overflow-y: auto;
-        padding: 1rem;
-    }
+/* ===============================
+   HEADER BACKGROUND
+================================ */
+.rating-header-bg {
+    background:
+        linear-gradient(
+            rgba(112,48,160,0.75),
+            rgba(112,48,160,0.75)
+        ),
+        url('/static/images/rating-bg2.png') center / cover no-repeat;
 
-    .rating-scroll::-webkit-scrollbar {
-        width: 8px;
-    }
+    padding: 3rem 1rem;
+    border-radius: 20px 20px 0 0;
+    margin-bottom: 2rem;
+    text-align: center;
+}
 
-    .rating-scroll::-webkit-scrollbar-track {
-        background: #f0f0f0;
-        border-radius: 10px;
-    }
+.rating-header-bg h2 {
+    color: white;
+    font-size: 2.2rem;
+    font-weight: 800;
+}
 
-    .rating-scroll::-webkit-scrollbar-thumb {
-        background: #7030A0;
-        border-radius: 10px;
-    }
+.rating-header-bg p {
+    color: rgba(255,255,255,0.9);
+    font-size: 1rem;
+}
 
-    .rating-scroll::-webkit-scrollbar-thumb:hover {
-        background: #5a2480;
-    }
+/* ===============================
+   SCROLL
+================================ */
+.rating-scroll {
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 1rem;
+}
 
+.rating-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+.rating-scroll::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 10px;
+}
+
+.rating-scroll::-webkit-scrollbar-thumb {
+    background: #7030A0;
+    border-radius: 10px;
+}
+
+.rating-scroll::-webkit-scrollbar-thumb:hover {
+    background: #5a2480;
+}
+
+/* ===============================
+   ITEMS
+================================ */
+.rating-item {
+    display: grid;
+    grid-template-columns: 50px 1fr 70px 80px;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 10px;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.rating-item:hover {
+    background: #f8f5fc;
+    transform: translateX(5px);
+}
+
+.rating-top-1 {
+    background: linear-gradient(135deg, #FFF9E6 0%, #FFFFFF 100%);
+    border-color: #FFD700;
+}
+
+.rating-top-2 {
+    background: linear-gradient(135deg, #F8F8F8 0%, #FFFFFF 100%);
+    border-color: #C0C0C0;
+}
+
+.rating-top-3 {
+    background: linear-gradient(135deg, #FFF4E6 0%, #FFFFFF 100%);
+    border-color: #CD7F32;
+}
+
+.rating-position {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #7030A0;
+    text-align: center;
+}
+
+.rating-teacher {
+    min-width: 0;
+}
+
+.rating-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rating-meta {
+    font-size: 0.8rem;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 0.2rem;
+}
+
+.rating-score {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #7030A0;
+    text-align: right;
+}
+
+/* ===============================
+   MINI BAR
+================================ */
+.rating-bar-mini {
+    width: 80px;
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.bar-fill-mini {
+    height: 100%;
+    background: linear-gradient(90deg, #7030A0 0%, #9b59d0 100%);
+    border-radius: 4px;
+    transition: width 1s ease;
+}
+
+.rating-top-1 .bar-fill-mini {
+    background: linear-gradient(90deg, #FFD700 0%, #FFA500 100%);
+}
+
+.rating-top-2 .bar-fill-mini {
+    background: linear-gradient(90deg, #C0C0C0 0%, #A0A0A0 100%);
+}
+
+.rating-top-3 .bar-fill-mini {
+    background: linear-gradient(90deg, #CD7F32 0%, #B87333 100%);
+}
+
+/* ===============================
+   MOBILE
+================================ */
+@media (max-width: 768px) {
     .rating-item {
-        display: grid;
-        grid-template-columns: 50px 1fr 70px 80px;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.75rem;
-        border-radius: 10px;
-        margin-bottom: 0.5rem;
-        transition: all 0.3s ease;
-        border: 2px solid transparent;
-    }
-
-    .rating-item:hover {
-        background: #f8f5fc;
-        transform: translateX(5px);
-    }
-
-    .rating-top-1 {
-        background: linear-gradient(135deg, #FFF9E6 0%, #FFFFFF 100%);
-        border-color: #FFD700;
-    }
-
-    .rating-top-2 {
-        background: linear-gradient(135deg, #F8F8F8 0%, #FFFFFF 100%);
-        border-color: #C0C0C0;
-    }
-
-    .rating-top-3 {
-        background: linear-gradient(135deg, #FFF4E6 0%, #FFFFFF 100%);
-        border-color: #CD7F32;
-    }
-
-    .rating-position {
-        font-size: 1.8rem;
-        font-weight: bold;
-        color: #7030A0;
-        text-align: center;
-    }
-
-    .rating-teacher {
-        min-width: 0;
-    }
-
-    .rating-name {
-        font-weight: 700;
-        font-size: 1rem;
-        color: #333;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .rating-meta {
-        font-size: 0.8rem;
-        color: #666;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        margin-top: 0.2rem;
-    }
-
-    .rating-score {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: #7030A0;
-        text-align: right;
+        grid-template-columns: 40px 1fr 60px;
+        gap: 0.5rem;
     }
 
     .rating-bar-mini {
-        width: 80px;
-        height: 8px;
-        background: #e0e0e0;
-        border-radius: 4px;
-        overflow: hidden;
+        grid-column: 1 / -1;
+        width: 100%;
+        margin-top: 0.5rem;
     }
 
-    .bar-fill-mini {
-        height: 100%;
-        background: linear-gradient(90deg, #7030A0 0%, #9b59d0 100%);
-        border-radius: 4px;
-        transition: width 1s ease;
+    .rating-position {
+        font-size: 1.4rem;
     }
 
-    .rating-top-1 .bar-fill-mini {
-        background: linear-gradient(90deg, #FFD700 0%, #FFA500 100%);
+    .rating-score {
+        font-size: 1.2rem;
     }
 
-    .rating-top-2 .bar-fill-mini {
-        background: linear-gradient(90deg, #C0C0C0 0%, #A0A0A0 100%);
+    .rating-name {
+        font-size: 0.9rem;
     }
 
-    .rating-top-3 .bar-fill-mini {
-        background: linear-gradient(90deg, #CD7F32 0%, #B87333 100%);
+    .rating-meta {
+        font-size: 0.75rem;
     }
 
-    @media (max-width: 768px) {
-        .rating-item {
-            grid-template-columns: 40px 1fr 60px;
-            gap: 0.5rem;
-        }
-
-        .rating-bar-mini {
-            grid-column: 1 / -1;
-            width: 100%;
-            margin-top: 0.5rem;
-        }
-
-        .rating-position {
-            font-size: 1.4rem;
-        }
-
-        .rating-score {
-            font-size: 1.2rem;
-        }
-
-        .rating-name {
-            font-size: 0.9rem;
-        }
-
-        .rating-meta {
-            font-size: 0.75rem;
-        }
-
-        .rating-scroll {
-            max-height: 400px;
-        }
+    .rating-scroll {
+        max-height: 400px;
     }
+}
 </style>
 
 <script>
