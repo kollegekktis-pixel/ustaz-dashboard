@@ -213,12 +213,25 @@
 
     /* RULEBOX MODAL */
     .rulebox-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-        max-width: 600px;
-        margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);  /* 3 СТОЛБЦА! */
+    gap: 1.5rem;
+    max-width: 1000px;  /* Шире для 3 столбцов */
+    margin: 0 auto;
+}
+
+/* Адаптивность */
+@media (max-width: 1024px) {
+    .rulebox-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
+}
+
+@media (max-width: 640px) {
+    .rulebox-grid {
+        grid-template-columns: 1fr;
+    }
+}
 
     .rule-card {
         background: white;
