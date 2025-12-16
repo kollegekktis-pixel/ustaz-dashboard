@@ -333,7 +333,7 @@
     </div>
 </div>
 
-<!-- RULEBOX MODAL -->
+<!-- RULEBOX MODAL - ПРАВИЛЬНЫЙ ПОРЯДОК 3×3 -->
 <div id="ruleboxModal" class="modal">
     <div class="modal-content">
         <span class="close-btn" onclick="closeRuleBoxModal()">&times;</span>
@@ -344,17 +344,44 @@
         </div>
 
         <div class="rulebox-grid">
-            <a href="https://adilet.zan.kz/rus/docs/V1600013317" target="_blank" class="rule-card">
+            
+            <!-- ═══════════════════════════════════════════ -->
+            <!-- РЯД 1: карточки 1, 2, 3                    -->
+            <!-- ═══════════════════════════════════════════ -->
+            
+            <!-- 1. Правила аттестации -->
+            <a href="https://adilet.zan.kz/rus/docs/V1600013317" 
+               target="_blank" 
+               rel="noopener noreferrer" 
+               class="rule-card">
                 <div class="rule-icon">📜</div>
                 <div class="rule-name">{{ t('attestation_rules') }}</div>
                 <div class="rule-desc">{{ t('attestation_rules_desc') }}</div>
             </a>
             
-            <a href="https://adilet.zan.kz/rus/docs/Z1900000293" target="_blank" class="rule-card">
+            <!-- 2. О статусе педагога -->
+            <a href="https://adilet.zan.kz/rus/docs/Z1900000293" 
+               target="_blank" 
+               rel="noopener noreferrer" 
+               class="rule-card">
                 <div class="rule-icon">👨‍🏫</div>
                 <div class="rule-name">{{ t('teacher_status') }}</div>
                 <div class="rule-desc">{{ t('teacher_status_desc') }}</div>
             </a>
+            
+            <!-- 3. Типовые учебные планы -->
+            <a href="https://adilet.zan.kz/rus/docs/V1200008170" 
+               target="_blank" 
+               rel="noopener noreferrer" 
+               class="rule-card">
+                <div class="rule-icon">📚</div>
+                <div class="rule-name">{{ t('curriculum_plans') }}</div>
+                <div class="rule-desc">{{ t('curriculum_plans_desc') }}</div>
+            </a>
+            
+            <!-- ═══════════════════════════════════════════ -->
+            <!-- РЯД 2: карточки 4, 5, 6                    -->
+            <!-- ═══════════════════════════════════════════ -->
 
             <!-- 4. Квалификационные характеристики -->
             <a href="https://adilet.zan.kz/rus/docs/V090005750_" 
@@ -386,6 +413,10 @@
                 <div class="rule-desc">{{ t('antiterror_protection_desc') }}</div>
             </a>
             
+            <!-- ═══════════════════════════════════════════ -->
+            <!-- РЯД 3: карточки 7, 8, 9                    -->
+            <!-- ═══════════════════════════════════════════ -->
+            
             <!-- 7. Классное руководство -->
             <a href="https://adilet.zan.kz/rus/docs/V2200028354" 
                target="_blank" 
@@ -415,12 +446,7 @@
                 <div class="rule-name">{{ t('psycho_pedagogical_support') }}</div>
                 <div class="rule-desc">{{ t('psycho_pedagogical_support_desc') }}</div>
             </a>
-
-            <a href="https://adilet.zan.kz/rus/docs/V1200008170" target="_blank" class="rule-card">
-                <div class="rule-icon">📚</div>
-                <div class="rule-name">{{ t('curriculum_plans') }}</div>
-                <div class="rule-desc">{{ t('curriculum_plans_desc') }}</div>
-            </a>
+            
         </div>
     </div>
 </div>
