@@ -279,7 +279,19 @@
     .tab.active {
         background: #7030A0;        /* Фиолетовый */
         color: white;               /* Белый текст */
-    
+
+        .rating-bg {
+    background: 
+        linear-gradient(
+            rgba(255,255,255,0.92),
+            rgba(255,255,255,0.92)
+        ),
+        url('/static/images/rating-bg.png') center / cover no-repeat;
+
+    padding: 2rem;
+    border-radius: 16px;
+}
+
 </style>
 
 <div class="moderate-container">
@@ -479,10 +491,12 @@
     <!-- КОМПАКТНЫЙ РЕЙТИНГ В КВАДРАТИКЕ -->
     <!-- ============================================ -->
     
+    <div class="rating-bg">
+
     <div class="rating-box">
         <div class="rating-box-header">
             <h2>🏆 {{ t('rating_title') if t('rating_title') else 'Рейтинг педагогов' }}</h2>
-            <p>{{ t('top_teachers_subtitle') if t('top_teachers_subtitle') else 'ТОП-15 по баллам' }}</p>
+            <p>{{ t('top_teachers_subtitle') if t('top_teachers_subtitle') else 'ТОП-10 по баллам' }}</p>
         </div>
 
         {% if top_teachers %}
