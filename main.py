@@ -71,9 +71,6 @@ class Achievement(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     user = relationship("User", back_populates="achievements")
 
-
-Base.metadata.create_all(bind=engine)
-
 # ===========================
 # PASSWORD HASHING
 # ===========================
@@ -93,6 +90,9 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
+@app.on_event("startup")
+def on_startup():
+    Base.metadata.create_all(bind=engine)
 # ===========================
 # CLOUDINARY SETUP
 # ===========================
